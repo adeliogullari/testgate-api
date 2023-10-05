@@ -15,7 +15,7 @@ class RoleFactory(SQLAlchemyModelFactory):
 
     name = Faker('name')
     users = factory.RelatedFactoryList('tests.user.conftest.UserFactory', 'role', size=3)
-    permissions = []
+    permissions = factory.RelatedFactoryList('tests.permission.conftest.PermissionFactory', 'roles', size=3)
 
 
 @pytest.fixture(autouse=True)

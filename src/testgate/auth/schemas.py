@@ -1,53 +1,61 @@
-from typing import Optional, Any
+from typing import Optional
 from sqlmodel import SQLModel
 from pydantic import validator
-from bcrypt import hashpw, gensalt
-from jose import jwt
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
+from config import Settings
+from src.testgate.auth.crypto import PasswordHashLibrary, ScryptPasswordHashStrategy
+from src.testgate.auth.oauth2 import AccessToken, RefreshToken
+from src.testgate.auth.crypto.digest.strategy import Blake2bMessageDigestStrategy
+
+settings = Settings()
+access_token = AccessToken(Blake2bMessageDigestStrategy())
+refresh_token = RefreshToken(Blake2bMessageDigestStrategy())
+password_hash_library = PasswordHashLibrary(ScryptPasswordHashStrategy())
 
 
-class AuthLoginRequestModel(SQLModel):
-    email: Optional[Any]
-    password: Optional[Any]
-
-
-class AuthLoginResponseModel(SQLModel):
-    email: Optional[str]
-    # token: Optional[str]
-    #
-    # @validator('token', pre=True, always=True)
-    # def generate_token(cls, v, values, **kwargs):
-    #     return "token"
-
-
-class AuthRegisterRequestModel(SQLModel):
-    firstname: str
-    lastname: str
+class LoginCredentials(SQLModel):
     email: str
     password: str
 
 
-class AuthRegisterResponseModel(SQLModel):
+class LoginResponse(SQLModel):
+    email: str
+    access_token: Optional[str]
+    refresh_token: Optional[str]
+
+    @validator('access_token', pre=True, always=True)
+    def generate_access_token(cls, v, values, **kwargs):
+        now = datetime.utcnow()
+        exp = (now + timedelta(minutes=settings.testgate_jwt_access_token_exp_minutes)).timestamp()
+        payload = {'exp': exp, 'email': values['email']}
+        return access_token.encode(payload=payload,
+                                   key=settings.testgate_jwt_access_token_key,
+                                   headers={"alg": "blake2b", "typ": "JWT"})
+
+    @validator('refresh_token', pre=True, always=True)
+    def generate_refresh_token(cls, v, values, **kwargs):
+        now = datetime.utcnow()
+        exp = (now + timedelta(days=settings.testgate_jwt_refresh_token_exp_days)).timestamp()
+        payload = {'exp': exp, 'email': values['email']}
+        return refresh_token.encode(payload=payload,
+                                    key=settings.testgate_jwt_refresh_token_key,
+                                    headers={"alg": "blake2b", "typ": "JWT"})
+
+
+class RegisterCredentials(SQLModel):
     firstname: str
     lastname: str
+    username: str
     email: str
     password: str
 
+    @validator("password", pre=True, always=True)
+    def generate_password_hash(cls, v, values, **kwargs):
+        return password_hash_library.encode(v)
 
-# class AuthenticateUserRequestModel(SQLModel):
-#     email: str
-#     password: str
-#
-#
-# class AuthenticateUserResponseModel(SQLModel):
-#     id: str
-#     token: Optional[str]
-#
-#     @validator('token', pre=True, always=True)
-#     def generate_token(cls, v, values, **kwargs):
-#         now = datetime.utcnow()
-#         exp = (now + timedelta(seconds=JWT_TOKEN_EXP)).timestamp()
-#         email = values.get("email")
-#         claims = {"exp": exp, "email": email}
-#         return jwt.encode(claims=claims, key=JWT_TOKEN_KEY, algorithm=JWT_TOKEN_ALGORITHM)
+
+class RegisterResponse(SQLModel):
+    firstname: str
+    lastname: str
+    username: str
+    email: str

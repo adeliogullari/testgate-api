@@ -11,13 +11,18 @@ from ..team.models import Team
 
 from .constants import *
 
+from src.testgate.auth.crypto.password.library import PasswordHashLibrary
+from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy
+password_pash_library = PasswordHashLibrary(ScryptPasswordHashStrategy())
+
 
 class UserRequestModel(SQLModel):
     firstname: str
     lastname: str
+    username: str
     email: str
     verified: bool
-    image: str
+    image: Optional[Any]
     role: Optional[Any]
     team: Optional[Any]
 
@@ -35,6 +40,7 @@ class UserRequestModel(SQLModel):
 class UserResponseModel(SQLModel):
     firstname: str
     lastname: str
+    username: str
     email: str
     verified: bool
     image: str
@@ -65,6 +71,7 @@ class UserQueryParametersModel(SQLModel):
     limit: Optional[int]
     firstname: str
     lastname: str
+    username: str
     email: str
     verified: bool
     image: str
@@ -77,12 +84,7 @@ class CreateUserRequestModel(UserRequestModel):
 
     @validator("password", pre=True, always=True)
     def generate_password_hash(cls, v, values, **kwargs):
-        # scrypt.
-        # return scrypt(v, salt=os.urandom(scrypt.SALT))
-        # salt1 = os.urandom(blake2b.SALT_SIZE)
-        # h1 = blake2b(salt=salt1)
-        # h1.update(msg)
-        return hashpw(bytes(v, 'UTF-8'), gensalt())
+        return password_pash_library.encode(v)
 
 
 class CreateUserResponseModel(UserResponseModel):
@@ -108,11 +110,14 @@ class ChangeUserPasswordRequestModel(SQLModel):
 
     @validator("password", pre=True, always=True)
     def generate_password_hash(cls, v, values, **kwargs):
-        return hashpw(bytes(v, 'UTF-8'), gensalt())
+        return password_pash_library.encode(v)
+        # return hashpw(bytes(v, 'UTF-8'), gensalt())
 
     @validator("password_confirmation", pre=True, always=True)
     def generate_password_confirmation_hash(cls, v, values, **kwargs):
-        return hashpw(bytes(v, 'UTF-8'), gensalt())
+        return password_pash_library.encode(v)
+
+        # return hashpw(bytes(v, 'UTF-8'), gensalt())
 
 
 class ChangeUserPasswordResponseModel(UserResponseModel):

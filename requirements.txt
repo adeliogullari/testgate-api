@@ -1,11 +1,8 @@
-bcrypt==4.0.1
-fastapi==0.95.0
-psycopg2-binary==2.9.5
-pytest==7.2.2
-python-jose==3.3.0
-sqlmodel==0.0.8
-uvicorn==0.21.1
+uvicorn==0.24.0
+fastapi==0.104.1
+sqlmodel==0.0.12
 alembic==1.10.2
+faker==20.1.0
+pytest==7.4.3
 factory-boy==3.2.1
-httpx==0.23.3
-faker==18.4.0
+psycopg2-binary==2.9.5

@@ -1,7 +1,7 @@
 from typing import List, Annotated
 from jose import jwt
 from sqlmodel import Session
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 import src.testgate.user.service as user_service
@@ -33,6 +33,13 @@ from .constants import *
 from ..database.database import get_session
 from ..email import EmailService
 
+from src.testgate.auth.oauth2 import AccessToken, RefreshToken
+from src.testgate.auth.crypto.digest.strategy import Blake2bMessageDigestStrategy
+
+
+access_token = AccessToken(Blake2bMessageDigestStrategy())
+refresh_token = RefreshToken(Blake2bMessageDigestStrategy())
+
 router = APIRouter(tags=["users"])
 
 
@@ -43,16 +50,13 @@ router = APIRouter(tags=["users"])
 def retrieve_current_user(*,
                           session: Annotated[Session, Depends(get_session)],
                           settings: Annotated[Settings, Depends(get_settings)],
-                          http_authorization_credentials: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())]):
+                          http_authorization: Annotated[HTTPAuthorizationCredentials, Depends(HTTPBearer())]):
     """Retrieves current user."""
 
-    payload = jwt.decode(token=http_authorization_credentials.credentials,
-                         key=settings.testgate_jwt_token_key,
-                         algorithms=settings.testgate_jwt_token_algorithms)
+    verified, payload, headers, signature = access_token.verify_and_decode(key=settings.testgate_jwt_access_token_key,
+                                                                           token=http_authorization.credentials)
 
-    email = payload.get('email')
-
-    retrieved_user = user_service.retrieve_by_email(session=session, email=email)
+    retrieved_user = user_service.retrieve_by_email(session=session, email=payload['email'])
 
     return retrieved_user
 
@@ -61,7 +65,9 @@ def retrieve_current_user(*,
             response_model=RetrieveUserResponseModel,
             status_code=200,
             summary="Retrieves user by id")
-def retrieve_user_by_id(*, session: Session = Depends(get_session), id: int):
+def retrieve_user_by_id(*,
+                        session: Session = Depends(get_session),
+                        id: int):
     """Retrieves user by id."""
 
     retrieved_user = user_service.retrieve_by_id(session=session, id=id)
@@ -72,7 +78,6 @@ def retrieve_user_by_id(*, session: Session = Depends(get_session), id: int):
     return retrieved_user
 
 
-# dependencies=[Depends(allow_create_resource)]
 @router.get(path="/api/v1/users",
             response_model=List[RetrieveUserResponseModel],
             status_code=200,
@@ -152,11 +157,15 @@ def update_current_user(*,
                         settings: Annotated[Settings, Depends(get_settings)]):
     """Update current user by token."""
 
-    payload = jwt.decode(token=http_authorization_credentials.credentials,
-                         key=settings.testgate_jwt_token_key,
-                         algorithms=settings.testgate_jwt_token_algorithms)
+    is_token_verified = access_token.verify(key='key', token=http_authorization_credentials.credentials)
 
-    retrieved_user = user_service.retrieve_by_email(session=session, email=payload.get('email'))
+    payload = None
+    if is_token_verified:
+        payload = access_token.decode(token=http_authorization_credentials.credentials)
+
+    email = payload[0].get('email')
+
+    retrieved_user = user_service.retrieve_by_email(session=session, email=email)
 
     user.role = role_service.retrieve_by_name(session=session, name=user.role.name)
     user.team = team_service.retrieve_by_name(session=session, name=user.team.name)
@@ -166,7 +175,7 @@ def update_current_user(*,
     return updated_user
 
 
-@router.put(path="/api/v1/me/change-password",
+@router.put(path="/api/v1/me/change-password/",
             response_model=ChangeUserPasswordResponseModel,
             status_code=201)
 def change_current_user_password(*,
@@ -175,11 +184,15 @@ def change_current_user_password(*,
                                  http_authorization_credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
                                  settings: Annotated[Settings, Depends(get_settings)]):
 
-    payload = jwt.decode(token=http_authorization_credentials.credentials,
-                         key=settings.testgate_jwt_token_key,
-                         algorithms=settings.testgate_jwt_token_algorithms)
+    is_token_verified = access_token.verify(key='key', token=http_authorization_credentials.credentials)
 
-    retrieved_user = user_service.retrieve_by_email(session=session, email=payload.get('email'))
+    payload = None
+    if is_token_verified:
+        payload = access_token.decode(token=http_authorization_credentials.credentials)
+
+    email = payload[0].get('email')
+
+    retrieved_user = user_service.retrieve_by_email(session=session, email=email)
 
     if not retrieved_user:
         raise UserEmailNotFoundException
@@ -205,11 +218,13 @@ def verify_current_user(*,
                         token: str,
                         settings: Annotated[Settings, Depends(get_settings)]):
 
-    payload = jwt.decode(token=token,
-                         key=settings.testgate_jwt_token_key,
-                         algorithms=settings.testgate_jwt_token_algorithms)
+    is_token_verified = access_token.verify(key='key', token=token)
 
-    email = payload.get("email")
+    payload = None
+    if is_token_verified:
+        payload = access_token.decode(token=token)
+
+    email = payload[0].get('email')
 
     retrieved_user = user_service.retrieve_by_email(session=session, email=email)
 
@@ -223,15 +238,15 @@ def verify_current_user(*,
 
 @router.get(path="/api/v1/user/email/verification/{token}",
                  status_code=202)
-def send_user_verification_email(*, token):
+def send_user_verification_email(*, token, settings: Annotated[Settings, Depends(get_settings)]):
     payload = jwt.decode(token=token, key=JWT_TOKEN_KEY, algorithms=JWT_ACCESS_TOKEN_ALG)
     email = payload.get("email")
 
     email_service = EmailService()
     email_service.email_subject = "Email Verification"
-    email_service.email_from = SMTP_EMAIL_ADDRESS
+    email_service.email_from = settings.testgate_smtp_email_address
     email_service.email_to = email
-    email_service.email_password = SMTP_EMAIL_APP_PASSWORD
+    email_service.email_password = settings.testgate_smtp_email_app_password
 
     email_service.add_plain_text_message("Hi!\nHow are you?\nHere is the link you wanted:\nhttp://www.python.org")
     email_service.add_html_message(
@@ -275,11 +290,15 @@ def delete_current_user_by_token(*,
                                  session: Session = Depends(get_session),
                                  http_authorization_credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
                                  settings: Annotated[Settings, Depends(get_settings)]):
-    payload = jwt.decode(token=http_authorization_credentials.credentials,
-                         key=settings.testgate_jwt_token_key,
-                         algorithms=settings.testgate_jwt_token_algorithms)
+    is_token_verified = access_token.verify(key='key', token=http_authorization_credentials.credentials)
 
-    retrieved_user = user_service.retrieve_by_email(session=session, email=payload.get('email'))
+    payload = None
+    if is_token_verified:
+        payload = access_token.decode(token=http_authorization_credentials.credentials)
+
+    email = payload[0].get('email')
+
+    retrieved_user = user_service.retrieve_by_email(session=session, email=email)
 
     if not retrieved_user:
         raise UserNotFoundException
@@ -313,22 +332,26 @@ def retrieve_current_user_by_token(*,
                                    settings: Annotated[Settings, Depends(get_settings)]):
     """Retrieves current user by access token."""
 
-    payload = jwt.decode(token=http_authorization_credentials.credentials,
-                         key=settings.testgate_jwt_token_key,
-                         algorithms=settings.testgate_jwt_token_algorithms)
+    is_token_verified = access_token.verify(key='key', token=http_authorization_credentials.credentials)
 
-    retrieved_user = user_service.retrieve_by_email(session=session, email=payload.get('email'))
+    payload = None
+    if is_token_verified:
+        payload = access_token.decode(token=http_authorization_credentials.credentials)
+
+    email = payload[0].get('email')
+
+    retrieved_user = user_service.retrieve_by_email(session=session, email=email)
 
     return retrieved_user
 
 
 class RoleChecker:
-    def __init__(self, allowed_roles: List):
-        self.allowed_roles = allowed_roles
+    def __init__(self, role: str):
+        self.role = role
 
-    def __call__(self, current_user: User = Depends(retrieve_current_user_by_token)):
-        if current_user.roles != self.allowed_roles:
+    def __call__(self, current_user: User = Depends(retrieve_current_user)):
+        if current_user.role != self.role:
             raise HTTPException(status_code=403, detail="Operation not permitted")
 
 
-allow_create_resource = RoleChecker(["admin"])
+allow_create_resource = RoleChecker("admin")

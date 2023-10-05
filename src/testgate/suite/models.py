@@ -1,8 +1,6 @@
 from typing import Optional, TYPE_CHECKING
 from sqlmodel import SQLModel, Field, Relationship
-
-if TYPE_CHECKING:
-    from ..run.models import Run
+from ..execution.models import Execution
 
 
 class Suite(SQLModel, table=True):
@@ -13,8 +11,8 @@ class Suite(SQLModel, table=True):
     name: str = Field(default=None, unique=True, nullable=False)
     description: str = Field(default=None, unique=False, nullable=True)
     result: Optional["SuiteResult"] = Relationship(back_populates="suite", sa_relationship_kwargs={'uselist': False})
-    run_id: Optional[int] = Field(default=None, foreign_key="run.id")
-    run: Optional["Run"] = Relationship(back_populates="suites")
+    execution_id: Optional[int] = Field(default=None, foreign_key="execution.id")
+    execution: Optional["Execution"] = Relationship(back_populates="suites")
 
 
 class SuiteResult(SQLModel, table=True):

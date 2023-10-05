@@ -2,7 +2,7 @@ import json
 import base64
 import hashlib
 import secrets
-from .abstract import PasswordHashAlgorithm, PasswordHashStrategy
+from .abstract import PasswordHashAlgorithm
 
 
 class Scrypt(PasswordHashAlgorithm):
@@ -29,29 +29,17 @@ class Scrypt(PasswordHashAlgorithm):
                                        maxmem=self.maxmem,
                                        dklen=self.dklen)
 
-        return json.dumps({'algorithm': self.algorithm,
-                           'password_hash': base64.b64encode(password_hash).decode('utf-8'),
-                           'salt': salt,
-                           'cost_factor': self.cost_factor,
-                           'block_size': self.block_size,
-                           'parallelization_factor': self.parallelization_factor,
-                           'maxmem': self.maxmem,
-                           'dklen': self.dklen}).encode('utf-8')
+        return base64.b64encode(json.dumps({'algorithm': self.algorithm,
+                                            'password_hash': base64.b64encode(password_hash).decode('utf-8'),
+                                            'salt': salt,
+                                            'cost_factor': self.cost_factor,
+                                            'block_size': self.block_size,
+                                            'parallelization_factor': self.parallelization_factor,
+                                            'maxmem': self.maxmem,
+                                            'dklen': self.dklen}).encode('utf-8'))
 
     def decode(self, encoded_password: bytes):
         return super().decode(encoded_password=encoded_password)
 
     def verify(self, password: str, encoded_password: bytes):
         return super().verify(password=password, encoded_password=encoded_password)
-
-
-scrypt = Scrypt()
-
-
-class ScryptPasswordHashStrategy(PasswordHashStrategy):
-
-    def encode(self, password: str, salt: str) -> bytes:
-        return scrypt.encode(password=password, salt=salt)
-
-    def verify(self, password: str, encoded_password: bytes) -> bool:
-        return scrypt.verify(password=password, encoded_password=encoded_password)

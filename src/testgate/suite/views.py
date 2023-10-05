@@ -11,7 +11,7 @@ from .schemas import RetrieveSuiteResponseModel, \
 from ..user.views import allow_create_resource
 from ..database.database import get_session
 
-suite_router = APIRouter(tags=["suites"])
+router = APIRouter(tags=["suites"])
 
 SuiteNotFoundException = HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                        detail="A run with that id does not exist")
@@ -20,7 +20,7 @@ SuiteAlreadyExistsException = HTTPException(status_code=status.HTTP_409_CONFLICT
                                             detail="A run with that id already exists")
 
 
-@suite_router.get(path="/api/v1/suite/{id}",
+@router.get(path="/api/v1/suite/{id}",
                   response_model=RetrieveSuiteResponseModel,
                   status_code=200,
                   dependencies=[Depends(allow_create_resource)])
@@ -35,7 +35,7 @@ def retrieve_suite_by_id(*, session: Session = Depends(get_session), id: int):
     return retrieved_suite
 
 
-@suite_router.post(path="/api/v1/suite",
+@router.post(path="/api/v1/suite",
                    response_model=CreateSuiteResponseModel,
                    status_code=201,
                    dependencies=[Depends(allow_create_resource)])
@@ -52,7 +52,7 @@ def create_suite(*, session: Session = Depends(get_session), suite: CreateSuiteR
     return created_suite
 
 
-@suite_router.put(path="/api/v1/suite/{id}",
+@router.put(path="/api/v1/suite/{id}",
                   response_model=UpdateSuiteResponseModel,
                   status_code=200,
                   dependencies=[Depends(allow_create_resource)])
@@ -69,7 +69,7 @@ def update_suite(*, session: Session = Depends(get_session), id: int, suite: Upd
     return updated_suite
 
 
-@suite_router.delete(path="/api/v1/suite/{id}",
+@router.delete(path="/api/v1/suite/{id}",
                      response_model=DeleteSuiteResponseModel,
                      status_code=200,
                      dependencies=[Depends(allow_create_resource)])

@@ -11,7 +11,7 @@ from .schemas import RetrieveRoleResponseModel, \
 from ..user.views import allow_create_resource
 from ..database.database import get_session
 
-role_router = APIRouter(tags=["roles"])
+router = APIRouter(tags=["roles"])
 
 RoleNotFoundException = HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                       detail="A role with that id does not exist")
@@ -20,7 +20,7 @@ RoleAlreadyExistsException = HTTPException(status_code=status.HTTP_409_CONFLICT,
                                            detail="A role with that id already exists")
 
 
-@role_router.get(path="/api/v1/role/{id}",
+@router.get(path="/api/v1/role/{id}",
                  response_model=None,
                  status_code=200,
                  dependencies=[Depends(allow_create_resource)])
@@ -35,7 +35,7 @@ def retrieve_role_by_id(*, session: Session = Depends(get_session), id: int):
     return retrieved_role
 
 
-@role_router.get(path="/api/v1/roles",
+@router.get(path="/api/v1/roles",
                  response_model=List[RetrieveRoleResponseModel],
                  status_code=200,
                  dependencies=[Depends(allow_create_resource)])
@@ -47,7 +47,7 @@ def retrieve_role_by_query_parameters(*, session: Session = Depends(get_session)
     return retrieved_role
 
 
-@role_router.post(path="/api/v1/role",
+@router.post(path="/api/v1/role",
                   response_model=CreateRoleResponseModel,
                   status_code=201,
                   dependencies=[Depends(allow_create_resource)])
@@ -64,7 +64,7 @@ def create_role(*, session: Session = Depends(get_session), role: CreateRoleRequ
     return created_role
 
 
-@role_router.put(path="/api/v1/role/{id}",
+@router.put(path="/api/v1/role/{id}",
                  response_model=UpdateRoleResponseModel,
                  status_code=200,
                  dependencies=[Depends(allow_create_resource)])
@@ -81,7 +81,7 @@ def update_role(*, session: Session = Depends(get_session), id: int, role: Updat
     return updated_role
 
 
-@role_router.delete(path="/api/v1/role/{id}",
+@router.delete(path="/api/v1/role/{id}",
                     response_model=DeleteRoleResponseModel,
                     status_code=200,
                     dependencies=[Depends(allow_create_resource)])

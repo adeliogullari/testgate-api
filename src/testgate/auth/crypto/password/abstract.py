@@ -1,4 +1,5 @@
 import json
+import base64
 import secrets
 from typing import Any
 from abc import ABC, abstractmethod
@@ -12,7 +13,7 @@ class PasswordHashAlgorithm(ABC):
 
     @abstractmethod
     def decode(self, encoded_password: bytes) -> Any:
-        return json.loads(encoded_password.decode())
+        return json.loads(base64.b64decode(encoded_password).decode('utf-8'))
 
     @abstractmethod
     def verify(self, password: str, encoded_password: bytes) -> bool:

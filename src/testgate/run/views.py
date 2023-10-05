@@ -11,7 +11,7 @@ from .schemas import RetrieveRunResponseModel, \
 from ..user.views import allow_create_resource
 from ..database.database import get_session
 
-run_router = APIRouter(tags=["runs"])
+router = APIRouter(tags=["runs"])
 
 RunNotFoundException = HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                      detail="A run with that id does not exist")
@@ -20,7 +20,7 @@ RunAlreadyExistsException = HTTPException(status_code=status.HTTP_409_CONFLICT,
                                           detail="A run with that id already exists")
 
 
-@run_router.get(path="/api/v1/run/{id}",
+@router.get(path="/api/v1/run/{id}",
                 response_model=None,
                 status_code=200,
                 dependencies=[Depends(allow_create_resource)])
@@ -35,7 +35,7 @@ def retrieve_run_by_id(*, session: Session = Depends(get_session), id: int):
     return retrieved_run
 
 
-@run_router.get(path="/api/v1/runs",
+@router.get(path="/api/v1/runs",
                 response_model=List[RetrieveRunResponseModel],
                 status_code=200,
                 dependencies=[Depends(allow_create_resource)])
@@ -47,7 +47,7 @@ def retrieve_run_by_query_parameters(*, session: Session = Depends(get_session),
     return retrieved_run
 
 
-@run_router.post(path="/api/v1/run",
+@router.post(path="/api/v1/run",
                  response_model=CreateRunResponseModel,
                  status_code=201,
                  dependencies=[Depends(allow_create_resource)])
@@ -64,7 +64,7 @@ def create_run(*, session: Session = Depends(get_session), run: CreateRunRequest
     return created_run
 
 
-@run_router.put(path="/api/v1/run/{id}",
+@router.put(path="/api/v1/run/{id}",
                 response_model=UpdateRunResponseModel,
                 status_code=200,
                 dependencies=[Depends(allow_create_resource)])
@@ -81,7 +81,7 @@ def update_run(*, session: Session = Depends(get_session), id: int, run: UpdateR
     return updated_run
 
 
-@run_router.delete(path="/api/v1/run/{id}",
+@router.delete(path="/api/v1/run/{id}",
                    response_model=DeleteRunResponseModel,
                    status_code=200,
                    dependencies=[Depends(allow_create_resource)])

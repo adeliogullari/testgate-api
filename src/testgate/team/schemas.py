@@ -1,12 +1,5 @@
 from sqlmodel import SQLModel
-from pydantic import validator
-from bcrypt import hashpw, gensalt
-from jose import jwt
-from datetime import datetime
-from datetime import timedelta
 from typing import Optional, List
-from ..role.models import Role
-from ..team.models import Team
 from ..user.models import User
 from ..project.models import Project
 

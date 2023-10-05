@@ -1,30 +1,20 @@
-from glob import glob
 from typing import Any
 from typing import Generator
-from alembic import command
-from alembic.config import Config
-import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 
 from config import Settings, get_settings
-# from src.testgate.role.schemas import CreateRoleRequestModel
-# from src.testgate.role.service import upsert_role_service
-# from src.testgate.user.schemas import CreateUserRequestModel
-# from src.testgate.user.service import upsert_user_service
 
-# from src.testgate.user.schemas import CreateUserRequestModel, AuthenticateUserRequestModel
+from src.testgate.user.views import allow_create_resource
 from src.testgate.auth.views import router as auth_router
 from src.testgate.user.views import router as user_router
-from src.testgate.user.views import allow_create_resource, RoleChecker
-from src.testgate.role.views import role_router
-from src.testgate.team.views import team_router
-from src.testgate.project.views import project_router
-# from src.testgate.plan.views import plan_router
-from src.testgate.run.views import run_router
-from src.testgate.suite.views import suite_router
-# from src.testgate.result.views import result_router
+from src.testgate.role.views import router as role_router
+from src.testgate.team.views import router as team_router
+from src.testgate.project.views import router as project_router
+from src.testgate.run.views import router as run_router
+from src.testgate.suite.views import router as suite_router
+from src.testgate.permission.views import router as permission_router
 from src.testgate.database.database import get_session
 
 # from .role.conftest import role_factory, role_kwargs, make_role, role
@@ -33,21 +23,13 @@ from src.testgate.database.database import get_session
 from .role.conftest import *
 from .team.conftest import *
 from .user.conftest import *
-register(RoleFactory)
-
-# from tests.role.test_role_service import role
+from .permission.conftest import *
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
 connect_args = {"check_same_thread": False}
 engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True, connect_args=connect_args)
 SessionTesting = Session(engine, autocommit=False, autoflush=False)
-
-
-# alembic_cfg = Config()
-# alembic_cfg.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URL)
-# alembic_cfg.set_main_option("script_location", "src/alembic/")
-# command.upgrade(alembic_cfg, "head")
 
 
 def start_application():
@@ -57,10 +39,9 @@ def start_application():
     app.include_router(role_router)
     app.include_router(team_router)
     app.include_router(project_router)
-    # app.include_router(plan_router)
     app.include_router(run_router)
     app.include_router(suite_router)
-    # app.include_router(result_router)
+    app.include_router(permission_router)
     return app
 
 
@@ -73,7 +54,7 @@ def app() -> Generator[FastAPI, Any, None]:
 
 
 @pytest.fixture
-def db_session(app: FastAPI):  # -> Generator[SessionTesting, Any, None]:
+def db_session(app: FastAPI):
     connection = engine.connect()
     transaction = connection.begin()
     session = Session(bind=connection)
@@ -84,8 +65,7 @@ def db_session(app: FastAPI):  # -> Generator[SessionTesting, Any, None]:
 
 
 @pytest.fixture
-def client(app: FastAPI, db_session: SessionTesting):  # -> Generator[TestClient, Any, None]:
-
+def client(app: FastAPI, db_session: SessionTesting):
     def _get_session():
         try:
             yield db_session
@@ -93,9 +73,10 @@ def client(app: FastAPI, db_session: SessionTesting):  # -> Generator[TestClient
             pass
 
     def _get_settings():
-        return Settings(testgate_jwt_token_exp='72000',
-                        testgate_jwt_token_key='token_key',
-                        testgate_jwt_token_algorithms='HS256')
+        return Settings(testgate_jwt_access_token_exp_minutes="60",
+                        testgate_jwt_access_token_key="SJ6nWJtM737AZWevVdDEr4Fh0GmoyR8k",
+                        testgate_jwt_refresh_token_exp_days="90",
+                        testgate_jwt_refresh_token_key="SJ6nWJtM737AZWevVdDEr4Fh0GmoyR8k")
 
     def _allow_create_resource():
         return True
@@ -106,35 +87,3 @@ def client(app: FastAPI, db_session: SessionTesting):  # -> Generator[TestClient
 
     with TestClient(app) as client:
         yield client
-
-
-# @pytest.fixture(scope="function")
-# def create_and_authorize_user(client):
-#     """
-#     Create a new FastAPI TestClient that uses the `db_session` fixture to override
-#     the `get_db` dependency that is injected into routes.
-#     """
-#
-#     createUserRequestModel = CreateUserRequestModel(firstname="abdullah",
-#                                                     lastname="deliogullari",
-#                                                     email="abdullahdeliogullari@yaani.com",
-#                                                     password="19961996DsA&",
-#                                                     verified=True,
-#                                                     roles=[],
-#                                                     teams=[])
-#
-#     response = client.post("api/v1/user", json=createUserRequestModel.dict())
-#
-#     authenticateUserRequestModel = AuthenticateUserRequestModel(email="abdullahdeliogullari@yaani.com",
-#                                                                 password="19961996DsA&")
-#
-#     response = client.post("api/v1/user/user", json=authenticateUserRequestModel.dict())
-#
-#     return response
-
-
-# @pytest.fixture(scope="module")
-# def normal_user_token_headers(client: TestClient, db_session: Session):
-#     return authentication_token_from_email(
-#         client=client, email=settings.TEST_USER_EMAIL, db=db_session
-#     )

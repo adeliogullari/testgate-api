@@ -1,15 +1,11 @@
-import smtplib
-
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-
 from .service import *
 from .schemas import *
 from ..user.views import allow_create_resource
 
 from ..database.database import get_session
 
-team_router = APIRouter(tags=["teams"])
+router = APIRouter(tags=["teams"])
 
 TeamNotFoundException = HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                       detail="A team with this id does not exist")
@@ -18,7 +14,7 @@ TeamAlreadyExistsException = HTTPException(status_code=status.HTTP_409_CONFLICT,
                                            detail="A team with this id already exists")
 
 
-@team_router.get(path="/api/v1/team/{id}",
+@router.get(path="/api/v1/team/{id}",
                  response_model=None,
                  status_code=200,
                  dependencies=[Depends(allow_create_resource)])
@@ -33,7 +29,7 @@ def retrieve_team_by_id(*, session: Session = Depends(get_session), id: int):
     return retrieved_team
 
 
-@team_router.get(path="/api/v1/teams",
+@router.get(path="/api/v1/teams",
                  response_model=List[RetrieveTeamResponseModel],
                  status_code=200,
                  dependencies=[Depends(allow_create_resource)])
@@ -44,7 +40,7 @@ def retrieve_team_by_query_parameters(*, session: Session = Depends(get_session)
     return searched_role
 
 
-@team_router.post(path="/api/v1/team",
+@router.post(path="/api/v1/team",
                   response_model=CreateTeamResponseModel,
                   status_code=201,
                   dependencies=[Depends(allow_create_resource)])
@@ -61,7 +57,7 @@ def create_team(*, session: Session = Depends(get_session), team: CreateTeamRequ
     return created_team
 
 
-@team_router.put(path="/api/v1/team/{id}",
+@router.put(path="/api/v1/team/{id}",
                  response_model=UpdateTeamResponseModel,
                  status_code=200,
                  dependencies=[Depends(allow_create_resource)])
@@ -77,7 +73,7 @@ def update_team(*, session: Session = Depends(get_session), id: int, team: Updat
     return updated_team
 
 
-@team_router.delete(path="/api/v1/team/{id}",
+@router.delete(path="/api/v1/team/{id}",
                     response_model=DeleteTeamResponseModel,
                     status_code=200,
                     dependencies=[Depends(allow_create_resource)])

@@ -54,6 +54,7 @@ def create(*, session: Session, user: CreateUserRequestModel) -> Optional[User]:
     created_user = User()
     created_user.firstname = user.firstname
     created_user.lastname = user.lastname
+    created_user.username = user.username
     created_user.email = user.email
     created_user.password = user.password
     created_user.verified = user.verified

@@ -1,11 +1,12 @@
-from src.testgate.user.service import create, \
-    retrieve_by_id, \
-    retrieve_by_email, \
-    retrieve_by_query_parameters, \
-    update, \
-    update_password, \
-    verify, \
-    delete
+from src.testgate.user.service import (create,
+                                       retrieve_by_id,
+                                       retrieve_by_email,
+                                       retrieve_by_query_parameters,
+                                       update,
+                                       update_password,
+                                       verify,
+                                       delete)
+
 from src.testgate.user.schemas import CreateUserRequestModel, UserQueryParametersModel, UpdateUserRequestModel
 
 
@@ -35,6 +36,7 @@ def test_retrieve_by_email(db_session, user):
 def test_retrieve_by_query_parameters(db_session, user):
 
     query_parameters = UserQueryParametersModel(**user.__dict__)
+
     query_parameters.role = query_parameters.role.name
     query_parameters.team = query_parameters.team.name
 

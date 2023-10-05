@@ -9,7 +9,7 @@ from ..user.views import allow_create_resource
 
 from ..database.database import get_session
 
-project_router = APIRouter(tags=["projects"])
+router = APIRouter(tags=["projects"])
 
 ProjectNotFoundException = HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                          detail="A project with this id does not exist")
@@ -18,10 +18,10 @@ ProjectAlreadyExistsException = HTTPException(status_code=status.HTTP_409_CONFLI
                                               detail="A project with this id already exists")
 
 
-@project_router.get(path="/api/v1/project/{id}",
-                    response_model=RetrieveProjectResponseModel,
-                    status_code=200,
-                    dependencies=[Depends(allow_create_resource)])
+@router.get(path="/api/v1/project/{id}",
+            response_model=RetrieveProjectResponseModel,
+            status_code=200,
+            dependencies=[Depends(allow_create_resource)])
 def retrieve_project_by_id(*, session: Session = Depends(get_session), id: int):
     """Retrieves project by id."""
 
@@ -33,10 +33,10 @@ def retrieve_project_by_id(*, session: Session = Depends(get_session), id: int):
     return retrieved_project
 
 
-@project_router.get(path="/api/v1/projects",
-                    response_model=List[RetrieveProjectResponseModel],
-                    status_code=200,
-                    dependencies=[Depends(allow_create_resource)])
+@router.get(path="/api/v1/projects",
+            response_model=List[RetrieveProjectResponseModel],
+            status_code=200,
+            dependencies=[Depends(allow_create_resource)])
 def retrieve_project_by_query_parameters(*, session: Session = Depends(get_session), name: str = None):
     """Retrieve project by name"""
 
@@ -45,10 +45,10 @@ def retrieve_project_by_query_parameters(*, session: Session = Depends(get_sessi
     return retrieved_project
 
 
-@project_router.post(path="/api/v1/project",
-                     response_model=CreateProjectResponseModel,
-                     status_code=201,
-                     dependencies=[Depends(allow_create_resource)])
+@router.post(path="/api/v1/project",
+             response_model=CreateProjectResponseModel,
+             status_code=201,
+             dependencies=[Depends(allow_create_resource)])
 def create_project(*, session: Session = Depends(get_session), project: CreateProjectRequestModel):
     """Create project"""
 
@@ -62,10 +62,10 @@ def create_project(*, session: Session = Depends(get_session), project: CreatePr
     return created_project
 
 
-@project_router.put(path="/api/v1/project/{id}",
-                    response_model=UpdateProjectResponseModel,
-                    status_code=200,
-                    dependencies=[Depends(allow_create_resource)])
+@router.put(path="/api/v1/project/{id}",
+            response_model=UpdateProjectResponseModel,
+            status_code=200,
+            dependencies=[Depends(allow_create_resource)])
 def update_project(*, session: Session = Depends(get_session), id: int, project: UpdateProjectRequestModel):
     """Update project"""
 
@@ -79,10 +79,10 @@ def update_project(*, session: Session = Depends(get_session), id: int, project:
     return updated_project
 
 
-@project_router.delete(path="/api/v1/project/{id}",
-                       response_model=DeleteProjectResponseModel,
-                       status_code=200,
-                       dependencies=[Depends(allow_create_resource)])
+@router.delete(path="/api/v1/project/{id}",
+               response_model=DeleteProjectResponseModel,
+               status_code=200,
+               dependencies=[Depends(allow_create_resource)])
 def delete_project(*, session: Session = Depends(get_session), id: int):
     """Delete project"""
 

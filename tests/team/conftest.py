@@ -3,7 +3,6 @@ from src.testgate.team.models import Team
 from pytest_factoryboy import register
 from factory.alchemy import SQLAlchemyModelFactory
 from factory.faker import Faker
-import factory
 
 
 class TeamFactory(SQLAlchemyModelFactory):
@@ -15,6 +14,7 @@ class TeamFactory(SQLAlchemyModelFactory):
 
     name = Faker('name')
     users = [] #factory.RelatedFactoryList('tests.user.conftest.UserFactory', 'team', size=3)
+    projects = []
 
 
 @pytest.fixture(autouse=True)
