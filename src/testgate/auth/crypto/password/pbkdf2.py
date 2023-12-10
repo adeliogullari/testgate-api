@@ -17,21 +17,27 @@ class Pbkdf2(PasswordHashAlgorithm):
     def __init__(self):
         pass
 
-    def encode(self,
-               password: str,
-               salt: str = secrets.token_hex(64)) -> bytes:
-        password_hash = hashlib.pbkdf2_hmac(hash_name=self.hash_name,
-                                            password=password.encode('utf-8'),
-                                            salt=salt.encode('utf-8'),
-                                            iterations=self.iterations,
-                                            dklen=self.dklen)
+    def encode(self, password: str, salt: str = secrets.token_hex(64)) -> bytes:
+        password_hash = hashlib.pbkdf2_hmac(
+            hash_name=self.hash_name,
+            password=password.encode("utf-8"),
+            salt=salt.encode("utf-8"),
+            iterations=self.iterations,
+            dklen=self.dklen,
+        )
 
-        return base64.b64encode(json.dumps({'algorithm': self.algorithm,
-                                            'hash_name': self.hash_name,
-                                            'password_hash': base64.b64encode(password_hash).decode('utf-8'),
-                                            'salt': salt,
-                                            'iterations': self.iterations,
-                                            'dklen': self.dklen}).encode('utf-8'))
+        return base64.b64encode(
+            json.dumps(
+                {
+                    "algorithm": self.algorithm,
+                    "hash_name": self.hash_name,
+                    "password_hash": base64.b64encode(password_hash).decode("utf-8"),
+                    "salt": salt,
+                    "iterations": self.iterations,
+                    "dklen": self.dklen,
+                }
+            ).encode("utf-8")
+        )
 
     def decode(self, encoded_password: bytes):
         return super().decode(encoded_password=encoded_password)

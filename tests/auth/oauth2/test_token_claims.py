@@ -16,9 +16,7 @@ def test_verify_with_custom_attributes(payload):
     payload.nbf = nbf
     payload.iat = iat
 
-    assert payload.verify(iss=payload.iss,
-                          sub=payload.sub,
-                          aud=payload.aud) is True
+    assert payload.verify(iss=payload.iss, sub=payload.sub, aud=payload.aud) is True
 
 
 def test_verify_with_exceed_expiration(payload):
@@ -31,6 +29,4 @@ def test_verify_with_exceed_expiration(payload):
     payload.nbf = nbf
     payload.iat = iat
 
-    assert payload.verify(iss=payload.iss,
-                          sub=payload.sub,
-                          aud=payload.aud) is False
+    assert payload.verify(iss=payload.iss, sub=payload.sub, aud=payload.aud) is False

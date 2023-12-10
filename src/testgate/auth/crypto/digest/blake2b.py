@@ -15,19 +15,29 @@ class Blake2b(MessageDigestAlgorithm):
     def __init__(self):
         pass
 
-    def encode(self,
-               data: str,
-               key: str = secrets.token_hex(16),
-               salt: str = secrets.token_hex(4)) -> bytes:
-        data_hash = hashlib.blake2b(data.encode('utf-8'),
-                                    digest_size=self.digest_size,
-                                    key=key.encode('utf-8'),
-                                    salt=salt.encode('utf-8')).digest()
+    def encode(
+        self,
+        data: str,
+        key: str = secrets.token_hex(16),
+        salt: str = secrets.token_hex(4),
+    ) -> bytes:
+        data_hash = hashlib.blake2b(
+            data.encode("utf-8"),
+            digest_size=self.digest_size,
+            key=key.encode("utf-8"),
+            salt=salt.encode("utf-8"),
+        ).digest()
 
-        return base64.b64encode(json.dumps({'algorithm': self.algorithm,
-                                            'data_hash': base64.b64encode(data_hash).decode('utf-8'),
-                                            'salt': salt,
-                                            'digest_size': self.digest_size}).encode('utf-8'))
+        return base64.b64encode(
+            json.dumps(
+                {
+                    "algorithm": self.algorithm,
+                    "data_hash": base64.b64encode(data_hash).decode("utf-8"),
+                    "salt": salt,
+                    "digest_size": self.digest_size,
+                }
+            ).encode("utf-8")
+        )
 
     def decode(self, encoded_data: bytes):
         return super().decode(encoded_data=encoded_data)

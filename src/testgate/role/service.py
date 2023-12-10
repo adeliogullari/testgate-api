@@ -37,7 +37,9 @@ def retrieve_by_name(*, session: Session, name: str) -> Optional[Role]:
     return retrieved_role
 
 
-def retrieve_by_query_parameters(*, session: Session, query_parameters: dict) -> Optional[List[Role]]:
+def retrieve_by_query_parameters(
+    *, session: Session, query_parameters: dict
+) -> Optional[List[Role]]:
     """Return list of role objects based on the given query parameters."""
 
     statement = select(Role)
@@ -51,7 +53,9 @@ def retrieve_by_query_parameters(*, session: Session, query_parameters: dict) ->
     return retrieved_roles
 
 
-def update(*, session: Session, retrieved_role: Role, role: UpdateRoleRequestModel) -> Optional[Role]:
+def update(
+    *, session: Session, retrieved_role: Role, role: UpdateRoleRequestModel
+) -> Optional[Role]:
     """Updates an existing role object."""
 
     retrieved_role.name = role.name

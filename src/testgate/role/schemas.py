@@ -1,12 +1,11 @@
-from typing import List
 from sqlmodel import SQLModel
-from ..user.models import User
+from src.testgate.user.models import User
 
 
 class RetrieveRoleResponseModel(SQLModel):
     id: int
     name: str
-    users: List[User]
+    users: list[User]
 
 
 class CreateRoleRequestModel(SQLModel):

@@ -1,5 +1,4 @@
 import pytest
-import factory
 from factory.faker import Faker
 from src.testgate.permission.models import Permission
 from pytest_factoryboy import register
@@ -12,8 +11,7 @@ class PermissionFactory(SQLAlchemyModelFactory):
         sqlalchemy_session = None
         sqlalchemy_session_persistence = "flush"
 
-    name = Faker('name')
-    roles = factory.RelatedFactoryList('tests.role.conftest.RoleFactory', 'permissions', size=3)
+    name = Faker("name")
 
 
 @pytest.fixture(autouse=True)

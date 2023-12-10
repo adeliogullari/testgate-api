@@ -1,9 +1,12 @@
-from typing import Any, List, Optional
+from typing import Optional
 from sqlmodel import SQLModel
 
 
 class SuiteResult(SQLModel):
-    name: str
+    total: int
+    passed: int
+    failed: int
+    skipped: int
 
 
 class RetrieveSuiteResponseModel(SQLModel):

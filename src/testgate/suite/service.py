@@ -1,6 +1,6 @@
-from typing import Any, Optional, List
+from typing import Any, Optional
 from sqlmodel import select, Session
-from .models import Suite
+from .models import Suite, SuiteResult
 from .schemas import CreateSuiteRequestModel, UpdateSuiteRequestModel
 
 
@@ -8,8 +8,9 @@ def create(*, session: Session, suite: CreateSuiteRequestModel) -> Optional[Suit
     """Creates a new suite object."""
 
     created_suite = Suite()
+    suite_result = SuiteResult()
     created_suite.name = suite.name
-    created_suite.result = suite.result
+    created_suite.result = suite_result
 
     session.add(created_suite)
     session.commit()
@@ -38,7 +39,9 @@ def retrieve_by_name(*, session: Session, name: str) -> Optional[Suite]:
     return retrieved_suite
 
 
-def update(*, session: Session, retrieved_suite: Suite, suite: UpdateSuiteRequestModel) -> Optional[Suite]:
+def update(
+    *, session: Session, retrieved_suite: Suite, suite: UpdateSuiteRequestModel
+) -> Optional[Suite]:
     """Updates an existing suite object."""
 
     retrieved_suite.name = suite.name

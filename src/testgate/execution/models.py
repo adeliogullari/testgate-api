@@ -1,33 +1,35 @@
 from typing import Optional, TYPE_CHECKING, List
 from sqlmodel import SQLModel, Field, Relationship
+from src.testgate.suite.models import Suite
 
 if TYPE_CHECKING:
-    from ..repository.models import Repository
-    from ..suite.models import Suite
+    from src.testgate.repository.models import Repository
 
 
 class Execution(SQLModel, table=True):
-
     __tablename__ = "execution"
 
-    id: Optional[int] = Field(primary_key=True)
-    name: str = Field(default=None, unique=True, nullable=False)
-    description: str = Field(default=None, unique=False, nullable=True)
-    result: Optional["ExecutionResult"] = Relationship(back_populates="execution", sa_relationship_kwargs={'uselist': False})
+    id: int = Field(primary_key=True)
+    name: str = Field(unique=True)
     repository_id: Optional[int] = Field(default=None, foreign_key="repository.id")
     repository: Optional["Repository"] = Relationship(back_populates="executions")
-    suites: List["Suite"] = Relationship(back_populates="execution")
+    suites: List[Suite] = Relationship(back_populates="execution")
+    result: Optional["ExecutionResult"] = Relationship(
+        back_populates="execution", sa_relationship_kwargs={"uselist": False}
+    )
 
 
 class ExecutionResult(SQLModel, table=True):
-
     __tablename__ = "execution_result"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(default=None, unique=True, nullable=False)
+    id: int = Field(primary_key=True)
     total: Optional[int] = Field(default=0)
     passed: Optional[int] = Field(default=0)
     failed: Optional[int] = Field(default=0)
     skipped: Optional[int] = Field(default=0)
     execution_id: Optional[int] = Field(default=None, foreign_key="execution.id")
-    execution: Optional["Execution"] = Relationship(back_populates="result")
+    execution: Optional[Execution] = Relationship(back_populates="result")
+
+
+Suite.update_forward_refs()
+Execution.update_forward_refs()

@@ -7,12 +7,11 @@ from src.testgate.email.constants import SMTP_EMAIL_ADDRESS, SMTP_EMAIL_APP_PASS
 
 
 class EmailService:
-
     def __init__(self):
         self._email_subject: Optional[str] = None
         self._email_from: Optional[str] = None
         self._email_to: Optional[str] = None
-        self._email_messages: Optional[MIMEMultipart] = MIMEMultipart('alternative')
+        self._email_messages: Optional[MIMEMultipart] = MIMEMultipart("alternative")
         self._email_password: Optional[str] = None
         self._smtp_server: Optional[smtplib.SMTP] = None
 
@@ -57,11 +56,11 @@ class EmailService:
         self._email_password = value
 
     def add_plain_text_message(self, plain_text: str):
-        message = MIMEText(plain_text, 'plain')
+        message = MIMEText(plain_text, "plain")
         self._email_messages.attach(message)
 
     def add_html_message(self, html: str):
-        message = MIMEText(html, 'html')
+        message = MIMEText(html, "html")
         self._email_messages.attach(message)
 
     def start_smtp_server(self):
@@ -71,10 +70,12 @@ class EmailService:
         self._smtp_server.login(self._email_from, self._email_password)
 
     def send_email(self):
-        self._email_messages['Subject'] = self._email_subject
-        self._email_messages['From'] = self._email_from
-        self._email_messages['To'] = self.email_to
-        self._smtp_server.sendmail(self.email_from, self._email_to, self._email_messages.as_string())
+        self._email_messages["Subject"] = self._email_subject
+        self._email_messages["From"] = self._email_from
+        self._email_messages["To"] = self.email_to
+        self._smtp_server.sendmail(
+            self.email_from, self._email_to, self._email_messages.as_string()
+        )
         self._smtp_server.quit()
 
 

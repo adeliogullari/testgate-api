@@ -7,7 +7,6 @@ scrypt = Scrypt()
 
 
 class Pbkdf2PasswordHashStrategy(PasswordHashStrategy):
-
     def encode(self, password: str, salt: str) -> bytes:
         return pbkdf2.encode(password=password, salt=salt)
 
@@ -16,7 +15,6 @@ class Pbkdf2PasswordHashStrategy(PasswordHashStrategy):
 
 
 class ScryptPasswordHashStrategy(PasswordHashStrategy):
-
     def encode(self, password: str, salt: str) -> bytes:
         return scrypt.encode(password=password, salt=salt)
 

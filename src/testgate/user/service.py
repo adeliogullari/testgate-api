@@ -1,12 +1,13 @@
-from typing import Optional, List, Any
-from sqlmodel import select, Session, col
+from typing import Optional, List
+from sqlmodel import select, Session
 
-from .models import User
+from src.testgate.user.models import User
+from src.testgate.user.schemas import (
+    UserQueryParametersModel,
+    CreateUserRequestModel,
+    UpdateUserRequestModel,
+)
 from src.testgate.role.models import Role
-from src.testgate.team.models import Team
-from .schemas import UserQueryParametersModel,\
-                     CreateUserRequestModel, \
-                     UpdateUserRequestModel
 
 
 def retrieve_by_id(*, session: Session, id: int) -> Optional[User]:
@@ -29,19 +30,22 @@ def retrieve_by_email(*, session: Session, email: str) -> Optional[User]:
     return retrieved_user
 
 
-def retrieve_by_query_parameters(*, session: Session, query_parameters: UserQueryParametersModel) -> Optional[List[User]]:
+def retrieve_by_query_parameters(
+    *, session: Session, query_parameters: UserQueryParametersModel
+) -> Optional[List[User]]:
     """Returns a user object based on the given query parameters."""
 
     offset = query_parameters.offset
     limit = query_parameters.limit
 
-    statement = select(User).join(Role).join(Team).offset(offset).limit(limit)
+    statement = select(User).join(Role).offset(offset).limit(limit)
 
-    for attr, value in query_parameters.dict(exclude={'role', 'team'}, exclude_none=True).items():
+    for attr, value in query_parameters.dict(
+        exclude={"role"}, exclude_none=True
+    ).items():
         statement = statement.where(getattr(User, attr) == value)
 
     statement = statement.where(Role.name == query_parameters.role)
-    statement = statement.where(Team.name == query_parameters.team)
 
     retrieved_user = session.exec(statement).all()
 
@@ -49,18 +53,18 @@ def retrieve_by_query_parameters(*, session: Session, query_parameters: UserQuer
 
 
 def create(*, session: Session, user: CreateUserRequestModel) -> Optional[User]:
-    """Creates a new user."""
+    """Create a new user."""
 
-    created_user = User()
-    created_user.firstname = user.firstname
-    created_user.lastname = user.lastname
-    created_user.username = user.username
-    created_user.email = user.email
-    created_user.password = user.password
-    created_user.verified = user.verified
-    created_user.image = user.image
-    created_user.role = user.role
-    created_user.team = user.team
+    created_user = User(
+        firstname=user.firstname,
+        lastname=user.lastname,
+        username=user.username,
+        email=user.email,
+        password=user.password,
+        verified=user.verified,
+        image=user.image,
+        role=user.role,
+    )
 
     session.add(created_user)
     session.commit()
@@ -69,7 +73,9 @@ def create(*, session: Session, user: CreateUserRequestModel) -> Optional[User]:
     return created_user
 
 
-def update(*, session: Session, retrieved_user: User, user: UpdateUserRequestModel) -> Optional[User]:
+def update(
+    *, session: Session, retrieved_user: User, user: UpdateUserRequestModel
+) -> Optional[User]:
     """Updates an existing user."""
 
     retrieved_user.firstname = user.firstname
@@ -78,7 +84,6 @@ def update(*, session: Session, retrieved_user: User, user: UpdateUserRequestMod
     retrieved_user.verified = user.verified
     retrieved_user.image = user.image
     retrieved_user.role = user.role
-    retrieved_user.team = user.team
 
     updated_user = retrieved_user
 
@@ -89,7 +94,9 @@ def update(*, session: Session, retrieved_user: User, user: UpdateUserRequestMod
     return updated_user
 
 
-def update_password(*, session: Session, retrieved_user: User, password: str) -> Optional[User]:
+def update_password(
+    *, session: Session, retrieved_user: User, password: str
+) -> Optional[User]:
     """Updates an existing password"""
 
     retrieved_user.password = password

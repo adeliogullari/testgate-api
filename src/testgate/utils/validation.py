@@ -2,7 +2,6 @@ from typing import Any
 
 
 class FieldValidation:
-
     def __init__(self):
         pass
 

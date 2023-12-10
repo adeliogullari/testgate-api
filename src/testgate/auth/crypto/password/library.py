@@ -3,7 +3,6 @@ from src.testgate.auth.crypto.password.abstract import PasswordHashStrategy
 
 
 class PasswordHashLibrary:
-
     def __init__(self, strategy: PasswordHashStrategy):
         self._strategy = strategy
 
@@ -19,4 +18,6 @@ class PasswordHashLibrary:
         return self._strategy.encode(password=password, salt=salt)
 
     def verify(self, password: str, encoded_password: bytes) -> bool:
-        return self._strategy.verify(password=password, encoded_password=encoded_password)
+        return self._strategy.verify(
+            password=password, encoded_password=encoded_password
+        )

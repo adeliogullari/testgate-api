@@ -50,10 +50,7 @@ class RegisteredClaims:
     def _verify_iat(self, now: float) -> bool:
         return self.iat < now
 
-    def verify(self,
-               iss: str = None,
-               sub: str = None,
-               aud: str = None):
+    def verify(self, iss: str = None, sub: str = None, aud: str = None):
         now = datetime.utcnow().timestamp()
         verified_iss = self._verify_iss(iss=iss)
         verified_sub = self._verify_sub(sub=sub)
@@ -61,12 +58,14 @@ class RegisteredClaims:
         verified_exp = self._verify_exp(now=now)
         verified_nbf = self._verify_nbf(now=now)
         verified_iat = self._verify_iat(now=now)
-        return (verified_iss and
-                verified_sub and
-                verified_aud and
-                verified_exp and
-                verified_nbf and
-                verified_iat)
+        return (
+            verified_iss
+            and verified_sub
+            and verified_aud
+            and verified_exp
+            and verified_nbf
+            and verified_iat
+        )
 
 
 @dataclass

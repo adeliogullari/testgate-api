@@ -1,21 +1,17 @@
 import pytest
-from src.testgate.role.models import Role
-from factory.alchemy import SQLAlchemyModelFactory
-from pytest_factoryboy import register
 from factory.faker import Faker
-import factory
+from factory.alchemy import SQLAlchemyModelFactory
+from src.testgate.role.models import Role
+from pytest_factoryboy import register
 
 
 class RoleFactory(SQLAlchemyModelFactory):
-
     class Meta:
         model = Role
         sqlalchemy_session = None
         sqlalchemy_session_persistence = "flush"
 
-    name = Faker('name')
-    users = factory.RelatedFactoryList('tests.user.conftest.UserFactory', 'role', size=3)
-    permissions = factory.RelatedFactoryList('tests.permission.conftest.PermissionFactory', 'roles', size=3)
+    name = Faker("name")
 
 
 @pytest.fixture(autouse=True)

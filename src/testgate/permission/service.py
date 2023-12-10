@@ -1,10 +1,16 @@
 from typing import Optional, List
 from sqlmodel import select, Session
 from src.testgate.permission.models import Permission
-from .schemas import CreatePermissionRequest, PermissionQueryParameters, UpdatePermissionRequest
+from .schemas import (
+    CreatePermissionRequest,
+    PermissionQueryParameters,
+    UpdatePermissionRequest,
+)
 
 
-def create(*, session: Session, permission: CreatePermissionRequest) -> Optional[Permission]:
+def create(
+    *, session: Session, permission: CreatePermissionRequest
+) -> Optional[Permission]:
     """Creates a new permission object."""
 
     created_permission = Permission()
@@ -37,7 +43,9 @@ def retrieve_by_name(*, session: Session, name: str) -> Optional[Permission]:
     return retrieved_permission
 
 
-def retrieve_by_query_parameters(*, session: Session, query_parameters: PermissionQueryParameters) -> Optional[List[Permission]]:
+def retrieve_by_query_parameters(
+    *, session: Session, query_parameters: PermissionQueryParameters
+) -> Optional[List[Permission]]:
     """Return list of permission objects based on the given query parameters."""
 
     statement = select(Permission)
@@ -51,7 +59,12 @@ def retrieve_by_query_parameters(*, session: Session, query_parameters: Permissi
     return retrieved_permissions
 
 
-def update(*, session: Session, retrieved_permission: Permission, permission: UpdatePermissionRequest) -> Optional[Permission]:
+def update(
+    *,
+    session: Session,
+    retrieved_permission: Permission,
+    permission: UpdatePermissionRequest,
+) -> Optional[Permission]:
     """Updates an existing permission object."""
 
     retrieved_permission.name = permission.name
@@ -64,7 +77,9 @@ def update(*, session: Session, retrieved_permission: Permission, permission: Up
     return updated_permission
 
 
-def delete(*, session: Session, retrieved_permission: Permission) -> Optional[Permission]:
+def delete(
+    *, session: Session, retrieved_permission: Permission
+) -> Optional[Permission]:
     """Deletes an existing permission object."""
 
     session.delete(retrieved_permission)

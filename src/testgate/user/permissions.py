@@ -1,24 +1,20 @@
-# from typing import List, TYPE_CHECKING
-# from .views import retrieve_current_user_by_access_token
-# from fastapi import Depends, HTTPException
-# from models import User
-#
-#
-# class Permission:
-#
-#     def __init__(self):
-#         pass
-#
-#     def compare_roles(self, roles, permitted_roles):
-#         return list(set(roles).intersection(set(permitted_roles))) is not []
-#
-#
-# class UserPermission(Permission):
-#
-#     def __init__(self, roles: List):
-#         super().__init__()
-#         self.roles = roles
-#
-#     def __call__(self, current_user: User = Depends(retrieve_current_user_by_access_token)):
-#         if self.compare_roles(current_user.roles, self.roles):
-#             raise HTTPException(status_code=403, detail="Operation not permitted")
+from sqlmodel import Session
+from typing import List, Optional, Annotated
+from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+from src.testgate.user.models import User
+from src.testgate.user.views import retrieve_current_user
+
+
+class RoleChecker:
+    def __init__(self, roles: list[str], permission: Optional[str]):
+        self.roles = roles
+        self.permission = permission
+
+    def __call__(self, current_user: User = Depends(retrieve_current_user)):
+        if current_user.role.name not in self.roles:
+            raise HTTPException(status_code=403, detail="Operation not permitted")
+
+
+user_permission = RoleChecker(["Admin"], None)
