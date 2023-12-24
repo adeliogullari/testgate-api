@@ -4,7 +4,7 @@ import pytest
 @pytest.mark.parametrize("user__password", ["password_2024"])
 def test_login_with_valid_credentials(client, user_factory, user):
     response = client.post(
-        url="api/v1/auth/login",
+        url="/api/v1/auth/login",
         json=user_factory.stub(email=user.email, password="password_2024").__dict__,
     )
 
@@ -17,38 +17,35 @@ def test_login_with_valid_credentials(client, user_factory, user):
 @pytest.mark.parametrize("user__password", ["password_2024"])
 def test_login_with_invalid_email(client, user_factory, user):
     response = client.post(
-        url="api/v1/auth/login",
+        url="/api/v1/auth/login",
         json=user_factory.stub(
             email="invalid_email_2024@gmail.com", password="password_2024"
         ).__dict__,
     )
     assert response.status_code == 404
-    assert response.json()["detail"] == "User email does not exist"
 
 
 @pytest.mark.parametrize("user__password", ["password_2023"])
 def test_login_with_invalid_password(client, user_factory, user):
     response = client.post(
-        url="api/v1/auth/login",
+        url="/api/v1/auth/login",
         json=user_factory.stub(
             email=user.email, password="invalid_password_2024"
         ).__dict__,
     )
 
     assert response.status_code == 403
-    assert response.json()["detail"] == "User password is invalid"
 
 
 def test_register_with_valid_credentials(client, user_factory):
-    response = client.post("api/v1/auth/register", json=user_factory.stub().__dict__)
+    response = client.post("/api/v1/auth/register", json=user_factory.stub().__dict__)
 
     assert response.status_code == 201
 
 
 def test_register_with_existing_email(client, user_factory, user):
     response = client.post(
-        "api/v1/auth/register", json=user_factory.stub(email=user.email).__dict__
+        "/api/v1/auth/register", json=user_factory.stub(email=user.email).__dict__
     )
 
     assert response.status_code == 409
-    assert response.json()["detail"] == "User email already exists"

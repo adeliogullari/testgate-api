@@ -10,8 +10,7 @@ from .schemas import (
     UpdateCaseResponseModel,
     DeleteCaseResponseModel,
 )
-from ..user.views import allow_create_resource
-from ..database.database import get_session
+from src.testgate.database.service import get_session
 
 router = APIRouter(tags=["cases"])
 
@@ -51,7 +50,6 @@ def create_suite(
     path="/api/v1/case/{id}",
     response_model=UpdateCaseResponseModel,
     status_code=200,
-    dependencies=[Depends(allow_create_resource)],
 )
 def update_case(
     *, session: Session = Depends(get_session), id: int, case: UpdateCaseRequestModel
@@ -72,7 +70,6 @@ def update_case(
     path="/api/v1/case/{id}",
     response_model=DeleteCaseResponseModel,
     status_code=200,
-    dependencies=[Depends(allow_create_resource)],
 )
 def delete_suite(*, session: Session = Depends(get_session), id: int):
     """Deletes case."""

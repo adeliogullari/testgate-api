@@ -1,11 +1,11 @@
 from typing import Optional
 from sqlmodel import Session
-from .schemas import RegisterCredentials
 from src.testgate.user.models import User
+from src.testgate.auth.schemas import RegisterCredentials
 
 
 def register(*, session: Session, credentials: RegisterCredentials) -> Optional[User]:
-    """Register a new user."""
+    """Registers a new user."""
 
     created_user = User()
     created_user.firstname = credentials.firstname

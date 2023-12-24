@@ -6,8 +6,6 @@ from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from config import Settings, get_settings
 
-from src.testgate.user.views import allow_create_resource
-
 from src.testgate.auth.views import router as auth_router
 from src.testgate.user.views import router as user_router
 from src.testgate.role.views import router as role_router
@@ -16,7 +14,7 @@ from src.testgate.repository.views import router as repository_router
 from src.testgate.execution.views import router as execution_router
 from src.testgate.suite.views import router as suite_router
 from src.testgate.case.views import router as case_router
-from src.testgate.database.database import get_session
+from src.testgate.database.service import get_session
 
 from .user.conftest import UserFactory
 from .role.conftest import RoleFactory
@@ -97,11 +95,7 @@ def client(app: FastAPI, db_session: SessionTesting):
             testgate_jwt_refresh_token_key="SJ6nWJtM737AZWevVdDEr4Fh0GmoyR8k",
         )
 
-    def _allow_create_resource():
-        return True
-
     app.dependency_overrides[get_session] = _get_session
-    app.dependency_overrides[allow_create_resource] = _allow_create_resource
     app.dependency_overrides[get_settings] = _get_settings
 
     with TestClient(app) as client:

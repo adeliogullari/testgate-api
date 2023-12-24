@@ -1,7 +1,9 @@
 from sqlmodel import SQLModel
 from pydantic import validator
 from typing import Optional, List, Any
+
 from src.testgate.role.models import Role
+from src.testgate.repository.models import Repository
 
 from src.testgate.auth.crypto.password.library import PasswordHashLibrary
 from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy
@@ -24,21 +26,31 @@ class UserRequestModel(SQLModel):
         if v:
             return Role(name=v)
 
+    @validator("repositories", pre=True, always=True)
+    def generate_repositories(cls, v, values, **kwargs):
+        if v:
+            return [Repository(name=repository) for repository in v]
+
 
 class UserResponseModel(SQLModel):
-    firstname: str
-    lastname: str
+    firstname: str | None
+    lastname: str | None
     username: str
     email: str
     verified: bool
-    image: str
+    image: str | None
     role: str | None
-    repositories: Optional[List[Any]]
+    repositories: List[str] | List[None] | None
 
     @validator("role", pre=True, always=True)
     def generate_role_name(cls, v, values, **kwargs):
         if v:
             return v.name
+
+    @validator("repositories", pre=True, always=True)
+    def generate_repositories_name(cls, v, values, **kwargs):
+        if v:
+            return [repository.name for repository in v]
 
 
 class RetrieveUserResponseModel(UserResponseModel):
@@ -47,6 +59,16 @@ class RetrieveUserResponseModel(UserResponseModel):
 
 class RetrieveCurrentUserResponseModel(UserResponseModel):
     id: int
+
+
+class RetrieveCurrentUserRepositoryResponseModel(SQLModel):
+    id: int
+    repositories: List[str] | List[None] | None
+
+    @validator("repositories", pre=True, always=True)
+    def generate_repositories_name(cls, v, values, **kwargs):
+        if v:
+            return [repository.name for repository in v]
 
 
 class UserQueryParametersModel(SQLModel):
@@ -71,7 +93,7 @@ class CreateUserRequestModel(UserRequestModel):
 
 
 class CreateUserResponseModel(UserResponseModel):
-    id: str
+    id: int
 
 
 class UpdateUserRequestModel(UserRequestModel):
@@ -79,11 +101,11 @@ class UpdateUserRequestModel(UserRequestModel):
 
 
 class UpdateUserResponseModel(UserResponseModel):
-    id: str
+    id: int
 
 
 class VerifyUserResponseModel(UserResponseModel):
-    id: str
+    id: int
 
 
 class ChangeUserPasswordRequestModel(SQLModel):
@@ -101,11 +123,15 @@ class ChangeUserPasswordRequestModel(SQLModel):
 
 
 class ChangeUserPasswordResponseModel(UserResponseModel):
-    id: str
+    id: int
+
+
+class DeleteCurrentUserRepositoryResponseModel(SQLModel):
+    id: int
 
 
 class DeleteUserResponseModel(UserResponseModel):
-    id: str
+    id: int
 
 
 class AuthenticateUserRequestModel(SQLModel):

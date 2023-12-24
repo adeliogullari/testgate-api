@@ -9,11 +9,11 @@ from .schemas import (
     RegisterResponse,
 )
 from src.testgate.user.exceptions import (
-    UserEmailNotFoundException,
+    UserNotFoundByEmailException,
     UserEmailAlreadyExistsException,
     InvalidPasswordException,
 )
-from ..database.database import get_session
+from src.testgate.database.service import get_session
 
 router = APIRouter(tags=["auth"])
 
@@ -23,11 +23,11 @@ def login(
     *, session: Session = Depends(get_session), login_credentials: LoginCredentials
 ):
     retrieved_user = user_service.retrieve_by_email(
-        session=session, email=login_credentials.email
+        session=session, user_email=login_credentials.email
     )
 
     if not retrieved_user:
-        raise UserEmailNotFoundException
+        raise UserNotFoundByEmailException
 
     if not retrieved_user.check_password(login_credentials.password):
         raise InvalidPasswordException
@@ -42,7 +42,7 @@ def register(
     *, session: Session = Depends(get_session), credentials: RegisterCredentials
 ):
     retrieved_user = user_service.retrieve_by_email(
-        session=session, email=credentials.email
+        session=session, user_email=credentials.email
     )
 
     if retrieved_user:

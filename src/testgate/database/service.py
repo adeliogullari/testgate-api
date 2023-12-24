@@ -28,6 +28,6 @@ def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
 
-def session():
+def get_session():
     with Session(engine, autocommit=False, autoflush=False) as session:
         yield session

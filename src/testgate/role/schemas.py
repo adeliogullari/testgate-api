@@ -1,5 +1,11 @@
+from enum import StrEnum
 from sqlmodel import SQLModel
 from src.testgate.user.models import User
+
+
+class Roles(StrEnum):
+    DEVELOPER = "Developer"
+    ADMINISTRATOR = "Administrator"
 
 
 class RetrieveRoleResponseModel(SQLModel):

@@ -23,13 +23,17 @@ def test_create(db_session, repository_factory):
 
 
 def test_retrieve_by_id(db_session, repository):
-    retrieved_repository = retrieve_by_id(session=db_session, id=repository.id)
+    retrieved_repository = retrieve_by_id(
+        session=db_session, repository_id=repository.id
+    )
 
     assert retrieved_repository.id == repository.id
 
 
 def test_retrieve_by_name(db_session, repository):
-    retrieved_repository = retrieve_by_name(session=db_session, name=repository.name)
+    retrieved_repository = retrieve_by_name(
+        session=db_session, repository_name=repository.name
+    )
 
     assert retrieved_repository.name == repository.name
 

@@ -1,6 +1,7 @@
 from src.testgate.user.service import (
     create,
     retrieve_by_id,
+    retrieve_by_username,
     retrieve_by_email,
     retrieve_by_query_parameters,
     update,
@@ -16,22 +17,22 @@ from src.testgate.user.schemas import (
 )
 
 
-def test_create(db_session, user_factory):
-    user = CreateUserRequestModel(**user_factory.stub().__dict__)
-
-    created_user = create(session=db_session, user=user)
-
-    assert created_user.email == user.email
-
-
 def test_retrieve_by_id(db_session, user):
-    retrieved_user = retrieve_by_id(session=db_session, id=user.id)
+    retrieved_user = retrieve_by_id(session=db_session, user_id=user.id)
 
     assert retrieved_user.id == user.id
 
 
+def test_retrieve_by_username(db_session, user):
+    retrieved_user = retrieve_by_username(
+        session=db_session, user_username=user.username
+    )
+
+    assert retrieved_user.username == user.username
+
+
 def test_retrieve_by_email(db_session, user):
-    retrieved_user = retrieve_by_email(session=db_session, email=user.email)
+    retrieved_user = retrieve_by_email(session=db_session, user_email=user.email)
 
     assert retrieved_user.email == user.email
 
@@ -46,6 +47,14 @@ def test_retrieve_by_query_parameters(db_session, user):
     )
 
     assert retrieved_user[0].id == user.id
+
+
+def test_create(db_session, user_factory):
+    user = CreateUserRequestModel(**user_factory.stub().__dict__)
+
+    created_user = create(session=db_session, user=user)
+
+    assert created_user.email == user.email
 
 
 def test_update(db_session, user_factory, user):

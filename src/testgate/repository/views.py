@@ -19,20 +19,22 @@ from .service import (
     update,
     delete,
 )
-from ..database.database import get_session
+from src.testgate.database.service import get_session
 
 router = APIRouter(tags=["repository"])
 
 
 @router.get(
-    path="/api/v1/repository/{id}",
+    path="/api/v1/repository/{repository_id}",
     response_model=RetrieveRepositoryResponse,
     status_code=200,
 )
-def retrieve_repository_by_id(*, session: Session = Depends(get_session), id: int):
+def retrieve_repository_by_id(
+    *, session: Session = Depends(get_session), repository_id: int
+):
     """Retrieve repository by id."""
 
-    retrieved_repository = retrieve_by_id(session=session, id=id)
+    retrieved_repository = retrieve_by_id(session=session, repository_id=repository_id)
 
     if not retrieved_repository:
         raise RepositoryNotFoundException
@@ -73,7 +75,9 @@ def create_repository(
 ):
     """Creates repository."""
 
-    retrieved_repository = retrieve_by_name(session=session, name=repository.name)
+    retrieved_repository = retrieve_by_name(
+        session=session, repository_name=repository.name
+    )
 
     if retrieved_repository:
         raise RepositoryAlreadyExistsException
@@ -84,19 +88,19 @@ def create_repository(
 
 
 @router.put(
-    path="/api/v1/repository/{id}",
+    path="/api/v1/repository/{repository_id}",
     response_model=UpdateRepositoryResponse,
     status_code=200,
 )
 def update_repository(
     *,
     session: Session = Depends(get_session),
-    id: int,
+    repository_id: int,
     repository: UpdateRepositoryRequest,
 ):
     """Updates repository."""
 
-    retrieved_repository = retrieve_by_id(session=session, id=id)
+    retrieved_repository = retrieve_by_id(session=session, repository_id=repository_id)
 
     if not retrieved_repository:
         raise RepositoryNotFoundException
@@ -111,14 +115,14 @@ def update_repository(
 
 
 @router.delete(
-    path="/api/v1/repository/{id}",
+    path="/api/v1/repository/{repository_id}",
     response_model=DeleteRepositoryResponse,
     status_code=200,
 )
-def delete_repository(*, session: Session = Depends(get_session), id: int):
+def delete_repository(*, session: Session = Depends(get_session), repository_id: int):
     """Deletes repository."""
 
-    retrieved_repository = retrieve_by_id(session=session, id=id)
+    retrieved_repository = retrieve_by_id(session=session, repository_id=repository_id)
 
     if not retrieved_repository:
         raise RepositoryNotFoundException

@@ -19,7 +19,7 @@ from .service import (
     update,
     delete,
 )
-from ..database.database import get_session
+from src.testgate.database.service import get_session
 
 router = APIRouter(tags=["permissions"])
 

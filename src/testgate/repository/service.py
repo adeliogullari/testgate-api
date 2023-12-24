@@ -23,20 +23,20 @@ def create(
     return created_permission
 
 
-def retrieve_by_id(*, session: Session, id: int) -> Optional[Repository]:
+def retrieve_by_id(*, session: Session, repository_id: int) -> Optional[Repository]:
     """Return a repository object based on the given id."""
 
-    statement = select(Repository).where(Repository.id == id)
+    statement = select(Repository).where(Repository.id == repository_id)
 
     retrieved_permission = session.exec(statement).one_or_none()
 
     return retrieved_permission
 
 
-def retrieve_by_name(*, session: Session, name: str) -> Optional[Repository]:
+def retrieve_by_name(*, session: Session, repository_name: str) -> Optional[Repository]:
     """Return a repository object based on the given name."""
 
-    statement = select(Repository).where(Repository.name == name)
+    statement = select(Repository).where(Repository.name == repository_name)
 
     retrieved_repository = session.exec(statement).one_or_none()
 

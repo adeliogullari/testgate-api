@@ -1,5 +1,4 @@
 from src.testgate.auth.service import register
-
 from src.testgate.auth.schemas import RegisterCredentials
 
 

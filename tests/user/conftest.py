@@ -53,3 +53,8 @@ def token(user):
         key=settings.testgate_jwt_access_token_key,
         headers={"alg": settings.testgate_jwt_access_token_alg, "typ": "JWT"},
     )
+
+
+@pytest.fixture
+def headers(token):
+    return {"Authorization": f"Bearer {token}"}

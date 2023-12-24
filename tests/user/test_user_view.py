@@ -1,106 +1,235 @@
+import uuid
 import pytest
 
+INVALID_ACCESS_TOKEN = uuid.uuid4()
+INVALID_USER_ID = uuid.uuid4()
 
-@pytest.mark.parametrize("role__name", ["Admin"])
-def test_create_user(client, user_factory, role, token):
-    response = client.post(
-        url="api/v1/users",
-        json=user_factory.stub(role=role).__dict__,
-        headers={"Authorization": f"bearer {token}"},
-    )
-
-    assert response.status_code == 201
+invalid_headers = {"Authorization": f"bearer {INVALID_ACCESS_TOKEN}"}
 
 
-def test_create_user_with_invalid_token(client, user_factory):
-    response = client.post(
-        "api/v1/users",
-        json=user_factory.stub().__dict__,
-        headers={"Authorization": "bearer InvalidToken"},
-    )
+def test_retrieve_current_user(client, user, headers):
+    response = client.get(url="/api/v1/me", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["id"] == user.id
+
+
+def test_retrieve_current_user_with_invalid_token(client):
+    response = client.get(url="/api/v1/me", headers=invalid_headers)
 
     assert response.status_code == 403
 
 
 @pytest.mark.parametrize("role__name", ["Admin"])
-def test_create_user_with_existing_email(client, user_factory, user, role, token):
+def test_retrieve_user_by_id(client, user, headers):
+    response = client.get(url=f"/api/v1/users/{user.id}", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["id"] == user.id
+
+
+@pytest.mark.parametrize("role__name", ["Admin"])
+def test_retrieve_user_by_invalid_id(client, headers):
+    response = client.get(url=f"/api/v1/users/{INVALID_USER_ID}", headers=headers)
+
+    assert response.status_code == 404
+
+
+def test_retrieve_user_by_id_with_invalid_token(client, user):
+    response = client.get(url=f"/api/v1/users/{user.id}", headers=invalid_headers)
+
+    assert response.status_code == 403
+
+
+@pytest.mark.parametrize("role__name", ["Admin"])
+def test_create_user(client, user_factory, headers):
     response = client.post(
-        "api/v1/users",
-        json=user_factory.stub(email=user.email, role=role).__dict__,
-        headers={"Authorization": f"bearer {token}"},
+        url="/api/v1/users", json=user_factory.stub().__dict__, headers=headers
+    )
+
+    assert response.status_code == 201
+
+
+@pytest.mark.parametrize("role__name", ["Admin"])
+def test_create_user_with_existing_username(client, user_factory, user, headers):
+    response = client.post(
+        url="/api/v1/users",
+        json=user_factory.stub(username=user.username).__dict__,
+        headers=headers,
     )
 
     assert response.status_code == 409
 
 
-def test_retrieve_current_user(client, user, token):
-    response = client.get("api/v1/me", headers={"Authorization": f"bearer {token}"})
-
-    assert response.status_code == 200
-
-
-def test_retrieve_current_user_with_invalid_token(client, user, token):
-    response = client.get("api/v1/me", headers={"Authorization": "bearer InvalidToken"})
-
-    assert response.status_code == 403
-
-
 @pytest.mark.parametrize("role__name", ["Admin"])
-def test_retrieve_user_by_id(client, user, token):
-    response = client.get(
-        f"api/v1/users/{user.id}", headers={"Authorization": f"bearer {token}"}
+def test_create_user_with_existing_email(client, user_factory, user, headers):
+    response = client.post(
+        url="/api/v1/users",
+        json=user_factory.stub(email=user.email).__dict__,
+        headers=headers,
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 409
 
 
-def test_retrieve_user_by_id_with_invalid_token(client, user, token):
-    response = client.get(
-        f"api/v1/users/{user.id}", headers={"Authorization": "bearer InvalidToken"}
+def test_create_user_with_invalid_token(client, user_factory):
+    response = client.post(
+        url="/api/v1/users", json=user_factory.stub().__dict__, headers=invalid_headers
     )
 
     assert response.status_code == 403
 
 
-@pytest.mark.parametrize("role__name", ["Admin"])
-def test_verify_current_user(client, user, token):
-    response = client.get(
-        f"/api/v1/user/email/verify/{token}",
-        headers={"Authorization": f"bearer {token}"},
+def test_update_current_user(client, user_factory, user, headers):
+    response = client.put(
+        url="/api/v1/me", json=user_factory.stub().__dict__, headers=headers
     )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == user.id
+
+
+def test_update_current_user_with_invalid_token(client, user_factory):
+    response = client.put(
+        url="/api/v1/me", json=user_factory.stub().__dict__, headers=invalid_headers
+    )
+
+    assert response.status_code == 403
+
+
+@pytest.mark.parametrize("role__name", ["Admin"])
+def test_update_user(client, user_factory, user, headers):
+    response = client.put(
+        url=f"/api/v1/users/{user.id}",
+        json=user_factory.stub().__dict__,
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == user.id
+
+
+@pytest.mark.parametrize("role__name", ["Admin"])
+def test_update_user_by_invalid_id(client, user_factory, headers):
+    response = client.put(
+        url=f"/api/v1/users/{INVALID_USER_ID}",
+        json=user_factory.stub().__dict__,
+        headers=headers,
+    )
+
+    assert response.status_code == 404
+
+
+def test_update_user_with_invalid_token(client, user_factory, user):
+    response = client.put(
+        url=f"/api/v1/users/{user.id}",
+        json=user_factory.stub().__dict__,
+        headers=invalid_headers,
+    )
+
+    assert response.status_code == 403
+
+
+def test_verify_current_user(client, token):
+    response = client.get(url=f"/api/v1/users/email/verify/{token}")
 
     assert response.status_code == 200
     assert response.json()["verified"] is True
 
 
+def test_verify_current_user_with_invalid_token(client):
+    response = client.get(url=f"/api/v1/users/email/verify/{INVALID_ACCESS_TOKEN}")
+
+    assert response.status_code == 403
+
+
 @pytest.mark.parametrize("user__password", ["password_2024"])
-def test_change_current_user_password(client, token):
+def test_change_current_user_password(client, user, headers):
     response = client.put(
-        "api/v1/me/change-password",
+        url="/api/v1/me/change-password",
         json={
             "current_password": "password_2024",
             "password": "new_password_2024",
             "password_confirmation": "new_password_2024",
         },
-        headers={"Authorization": f"bearer {token}"},
+        headers=headers,
     )
 
     assert response.status_code == 201
+    assert response.json()["id"] == user.id
+
+
+def test_change_current_user_password_with_invalid_token(client):
+    response = client.put(
+        url="/api/v1/me/change-password",
+        json={
+            "current_password": "password_2024",
+            "password": "new_password_2024",
+            "password_confirmation": "new_password_2024",
+        },
+        headers=invalid_headers,
+    )
+
+    assert response.status_code == 403
 
 
 @pytest.mark.parametrize("role__name", ["Admin"])
-def test_delete_current_user(client, user, token):
-    response = client.delete(
-        "api/v1/user/me", headers={"Authorization": f"bearer {token}"}
-    )
+def test_delete_current_user(client, user, headers):
+    response = client.delete(url="/api/v1/me", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["id"] == user.id
+
+
+def test_delete_current_user_with_invalid_token(client):
+    response = client.delete(url="/api/v1/me", headers=invalid_headers)
+
+    assert response.status_code == 403
+
+
+@pytest.mark.parametrize("role__name", ["Admin"])
+def test_delete_user(client, user, headers):
+    response = client.delete(url=f"/api/v1/users/{user.id}", headers=headers)
 
     assert response.status_code == 200
 
 
 @pytest.mark.parametrize("role__name", ["Admin"])
-def test_delete_user_by_id(client, user, token):
-    response = client.delete(
-        f"api/v1/user/{user.id}", headers={"Authorization": f"bearer {token}"}
+def test_delete_user_by_invalid_id(client, headers):
+    response = client.delete(url=f"/api/v1/users/{INVALID_USER_ID}", headers=headers)
+
+    assert response.status_code == 404
+
+
+def test_delete_user_with_invalid_token(client, user):
+    response = client.delete(url=f"/api/v1/users/{user.id}", headers=invalid_headers)
+
+    assert response.status_code == 403
+
+
+def test_retrieve_current_user_repositories(client, user, token, repository_factory):
+    repositories = repository_factory.create_batch(5)
+    user.repositories = repositories
+    response = client.get(
+        url="/api/v1/me/repositories",
+        headers={"Authorization": f"bearer {token}"},
     )
 
     assert response.status_code == 200
+    assert response.json()["repositories"] == [
+        repository.name for repository in repositories
+    ]
+
+
+def test_delete_current_user_repositories(client, user, headers, repository_factory):
+    repositories = repository_factory.create_batch(5)
+    user.repositories = repositories
+    response = client.delete(
+        url=f"/api/v1/me/repositories/{repositories[0].id}",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["repositories"] == [
+        repository.name for repository in repositories[1:5]
+    ]

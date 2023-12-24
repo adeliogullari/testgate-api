@@ -15,8 +15,8 @@ def test_create_permission_with_existing_email(client, permission_factory, permi
     assert response.status_code == 409
 
 
-def test_retrieve_permission_by_id(client, user):
-    response = client.get(f"api/v1/users/{user.id}")
+def test_retrieve_permission_by_id(client, permission):
+    response = client.get(f"api/v1/permission/{permission.id}")
 
     assert response.status_code == 200
 

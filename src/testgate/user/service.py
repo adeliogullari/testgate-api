@@ -10,20 +10,30 @@ from src.testgate.user.schemas import (
 from src.testgate.role.models import Role
 
 
-def retrieve_by_id(*, session: Session, id: int) -> Optional[User]:
+def retrieve_by_id(*, session: Session, user_id: int) -> Optional[User]:
     """Returns a user object based on the given user id."""
 
-    statement = select(User).where(User.id == id)
+    statement = select(User).where(User.id == user_id)
 
     retrieved_user = session.exec(statement).one_or_none()
 
     return retrieved_user
 
 
-def retrieve_by_email(*, session: Session, email: str) -> Optional[User]:
+def retrieve_by_username(*, session: Session, user_username: str) -> Optional[User]:
+    """Returns a user object based on the given user username."""
+
+    statement = select(User).where(User.username == user_username)
+
+    retrieved_user = session.exec(statement).one_or_none()
+
+    return retrieved_user
+
+
+def retrieve_by_email(*, session: Session, user_email: str) -> Optional[User]:
     """Returns a user object based on the given user email."""
 
-    statement = select(User).where(User.email == email)
+    statement = select(User).where(User.email == user_email)
 
     retrieved_user = session.exec(statement).one_or_none()
 
@@ -53,7 +63,7 @@ def retrieve_by_query_parameters(
 
 
 def create(*, session: Session, user: CreateUserRequestModel) -> Optional[User]:
-    """Create a new user."""
+    """Creates a new user."""
 
     created_user = User(
         firstname=user.firstname,

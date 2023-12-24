@@ -17,8 +17,7 @@ from .schemas import (
     UpdateRoleResponseModel,
     DeleteRoleResponseModel,
 )
-from ..user.views import allow_create_resource
-from ..database.database import get_session
+from src.testgate.database.service import get_session
 
 router = APIRouter(tags=["roles"])
 
@@ -35,7 +34,6 @@ RoleAlreadyExistsException = HTTPException(
     path="/api/v1/role/{id}",
     response_model=None,
     status_code=200,
-    dependencies=[Depends(allow_create_resource)],
 )
 def retrieve_role_by_id(*, session: Session = Depends(get_session), id: int):
     """Retrieve role by id."""
@@ -52,7 +50,6 @@ def retrieve_role_by_id(*, session: Session = Depends(get_session), id: int):
     path="/api/v1/roles",
     response_model=List[RetrieveRoleResponseModel],
     status_code=200,
-    dependencies=[Depends(allow_create_resource)],
 )
 def retrieve_role_by_query_parameters(
     *, session: Session = Depends(get_session), name: str = None
@@ -70,7 +67,6 @@ def retrieve_role_by_query_parameters(
     path="/api/v1/role",
     response_model=CreateRoleResponseModel,
     status_code=201,
-    dependencies=[Depends(allow_create_resource)],
 )
 def create_role(
     *, session: Session = Depends(get_session), role: CreateRoleRequestModel
@@ -91,7 +87,6 @@ def create_role(
     path="/api/v1/role/{id}",
     response_model=UpdateRoleResponseModel,
     status_code=200,
-    dependencies=[Depends(allow_create_resource)],
 )
 def update_role(
     *, session: Session = Depends(get_session), id: int, role: UpdateRoleRequestModel
@@ -112,7 +107,6 @@ def update_role(
     path="/api/v1/role/{id}",
     response_model=DeleteRoleResponseModel,
     status_code=200,
-    dependencies=[Depends(allow_create_resource)],
 )
 def delete_role(*, session: Session = Depends(get_session), id: int):
     """Deletes role."""
