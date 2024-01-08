@@ -12,9 +12,6 @@ class Blake2b(MessageDigestAlgorithm):
     algorithm = "blake2b"
     digest_size = blake2b.MAX_DIGEST_SIZE
 
-    def __init__(self):
-        pass
-
     def encode(
         self,
         data: str,

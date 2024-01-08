@@ -16,19 +16,32 @@ from src.testgate.suite.views import router as suite_router
 from src.testgate.case.views import router as case_router
 from src.testgate.database.service import get_session
 
-from .user.conftest import UserFactory
-from .role.conftest import RoleFactory
-from .permission.conftest import PermissionFactory
-from .repository.conftest import RepositoryFactory
-from .execution.conftest import ExecutionFactory
-from .suite.conftest import SuiteFactory
+from tests.user.conftest import UserFactory
+from tests.role.conftest import RoleFactory
+from tests.permission.conftest import PermissionFactory
+from tests.repository.conftest import RepositoryFactory
+from tests.execution.conftest import ExecutionResultFactory, ExecutionFactory
+from tests.suite.conftest import SuiteResultFactory, SuiteFactory
+from tests.case.conftest import CaseResultFactory, CaseFactory
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
 engine = create_engine(
     url=SQLALCHEMY_DATABASE_URL, echo=True, connect_args={"check_same_thread": False}
 )
+
 SessionTesting = Session(engine, autocommit=False, autoflush=False)
+
+register(UserFactory)
+register(RoleFactory)
+register(PermissionFactory)
+register(RepositoryFactory)
+register(ExecutionResultFactory)
+register(ExecutionFactory)
+register(SuiteResultFactory)
+register(SuiteFactory)
+register(CaseResultFactory)
+register(CaseFactory)
 
 
 @pytest.fixture(autouse=True)
@@ -37,14 +50,12 @@ def set_session_for_factory(db_session):
     RoleFactory._meta.sqlalchemy_session = db_session
     PermissionFactory._meta.sqlalchemy_session = db_session
     RepositoryFactory._meta.sqlalchemy_session = db_session
-
-
-register(UserFactory)
-register(RoleFactory)
-register(PermissionFactory)
-register(RepositoryFactory)
-register(ExecutionFactory)
-register(SuiteFactory)
+    ExecutionResultFactory._meta.sqlalchemy_session = db_session
+    ExecutionFactory._meta.sqlalchemy_session = db_session
+    SuiteResultFactory._meta.sqlalchemy_session = db_session
+    SuiteFactory._meta.sqlalchemy_session = db_session
+    CaseResultFactory._meta.sqlalchemy_session = db_session
+    CaseFactory._meta.sqlalchemy_session = db_session
 
 
 def start_application():
@@ -93,6 +104,7 @@ def client(app: FastAPI, db_session: SessionTesting):
             testgate_jwt_access_token_key="SJ6nWJtM737AZWevVdDEr4Fh0GmoyR8k",
             testgate_jwt_refresh_token_exp_days="90",
             testgate_jwt_refresh_token_key="SJ6nWJtM737AZWevVdDEr4Fh0GmoyR8k",
+            testgate_smtp_email_verification=True,
         )
 
     app.dependency_overrides[get_session] = _get_session

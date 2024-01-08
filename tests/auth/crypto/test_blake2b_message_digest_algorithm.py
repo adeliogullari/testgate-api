@@ -1,4 +1,4 @@
-def test_verify_with_valid_data_and_key(blake2b):
+def test_verify(blake2b):
     encoded_data = blake2b.encode(data="data", key="key")
     is_data_verified = blake2b.verify(data="data", key="key", encoded_data=encoded_data)
     assert is_data_verified is True

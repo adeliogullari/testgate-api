@@ -16,14 +16,13 @@ router = APIRouter(tags=["cases"])
 
 
 @router.get(
-    path="/api/v1/case/{id}",
+    path="/api/v1/cases/{case_id}",
     response_model=RetrieveCaseResponseModel,
     status_code=200,
 )
-def retrieve_suite_by_id(*, session: Session = Depends(get_session), id: int):
+def retrieve_case_by_id(*, session: Session = Depends(get_session), case_id: int | str):
     """Retrieve case by id."""
-
-    retrieved_case = retrieve_by_id(session=session, id=id)
+    retrieved_case = retrieve_by_id(session=session, case_id=case_id)
 
     if not retrieved_case:
         raise CaseNotFoundException
@@ -32,11 +31,11 @@ def retrieve_suite_by_id(*, session: Session = Depends(get_session), id: int):
 
 
 @router.post(
-    path="/api/v1/case",
+    path="/api/v1/cases",
     response_model=CreateCaseResponseModel,
     status_code=201,
 )
-def create_suite(
+def create_case(
     *, session: Session = Depends(get_session), case: CreateCaseRequestModel
 ):
     """Creates case."""
@@ -47,16 +46,19 @@ def create_suite(
 
 
 @router.put(
-    path="/api/v1/case/{id}",
+    path="/api/v1/cases/{case_id}",
     response_model=UpdateCaseResponseModel,
     status_code=200,
 )
 def update_case(
-    *, session: Session = Depends(get_session), id: int, case: UpdateCaseRequestModel
+    *,
+    session: Session = Depends(get_session),
+    case_id: int | str,
+    case: UpdateCaseRequestModel,
 ):
     """Updates case."""
 
-    retrieved_case = retrieve_by_id(session=session, id=id)
+    retrieved_case = retrieve_by_id(session=session, case_id=case_id)
 
     if not retrieved_case:
         raise CaseNotFoundException
@@ -67,14 +69,14 @@ def update_case(
 
 
 @router.delete(
-    path="/api/v1/case/{id}",
+    path="/api/v1/cases/{case_id}",
     response_model=DeleteCaseResponseModel,
     status_code=200,
 )
-def delete_suite(*, session: Session = Depends(get_session), id: int):
+def delete_suite(*, session: Session = Depends(get_session), case_id: int | str):
     """Deletes case."""
 
-    retrieved_case = retrieve_by_id(session=session, id=id)
+    retrieved_case = retrieve_by_id(session=session, case_id=case_id)
 
     if not retrieved_case:
         raise CaseNotFoundException

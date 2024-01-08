@@ -17,6 +17,14 @@ UserNotFoundByEmailException = HTTPException(
     status_code=HTTP_404_NOT_FOUND, detail="A user with this email does not exist"
 )
 
+UserIsNotVerifiedException = HTTPException(
+    status_code=HTTP_403_FORBIDDEN, detail="User is not verified"
+)
+
+UserRepositoryNotFoundException = HTTPException(
+    status_code=HTTP_404_NOT_FOUND, detail="A user with this email does not exist"
+)
+
 UserIdAlreadyExistsException = HTTPException(
     status_code=HTTP_409_CONFLICT, detail="A user with this id already exists"
 )

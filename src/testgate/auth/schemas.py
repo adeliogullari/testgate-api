@@ -1,7 +1,7 @@
-from typing import Optional
 from sqlmodel import SQLModel
-from pydantic import validator
 from datetime import datetime, timedelta
+from pydantic import field_validator, Field, ValidationInfo, EmailStr
+
 from config import Settings
 from src.testgate.auth.crypto.password.library import PasswordHashLibrary
 from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy
@@ -21,30 +21,30 @@ class LoginCredentials(SQLModel):
 
 
 class LoginResponse(SQLModel):
-    email: str
-    access_token: Optional[str]
-    refresh_token: Optional[str]
+    email: EmailStr
+    access_token: str | None = Field(default=None, validate_default=True, strict=True)
+    refresh_token: str | None = Field(default=None, validate_default=True, strict=True)
 
-    @validator("access_token", pre=True, always=True)
-    def generate_access_token(cls, v, values, **kwargs):
+    @field_validator("access_token")
+    def generate_access_token(cls, val: str, info: ValidationInfo) -> str:
         now = datetime.utcnow()
         exp = (
             now + timedelta(minutes=settings.testgate_jwt_access_token_exp_minutes)
         ).timestamp()
-        payload = {"exp": exp, "email": values["email"]}
+        payload = {"exp": exp, "email": info.data["email"]}
         return access_token.encode(
             payload=payload,
             key=settings.testgate_jwt_access_token_key,
             headers={"alg": settings.testgate_jwt_access_token_alg, "typ": "JWT"},
         )
 
-    @validator("refresh_token", pre=True, always=True)
-    def generate_refresh_token(cls, v, values, **kwargs):
+    @field_validator("refresh_token")
+    def generate_refresh_token(cls, val: str, info: ValidationInfo) -> str:
         now = datetime.utcnow()
         exp = (
             now + timedelta(days=settings.testgate_jwt_refresh_token_exp_days)
         ).timestamp()
-        payload = {"exp": exp, "email": values["email"]}
+        payload = {"exp": exp, "email": info.data["email"]}
         return refresh_token.encode(
             payload=payload,
             key=settings.testgate_jwt_refresh_token_key,
@@ -59,9 +59,9 @@ class RegisterCredentials(SQLModel):
     email: str
     password: str
 
-    @validator("password", pre=True, always=True)
-    def generate_password_hash(cls, v, values, **kwargs):
-        return password_hash_library.encode(v)
+    @field_validator("password")
+    def generate_password(cls, val: str, info: ValidationInfo) -> bytes:
+        return password_hash_library.encode(val)
 
 
 class RegisterResponse(SQLModel):

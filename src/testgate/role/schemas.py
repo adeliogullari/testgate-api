@@ -19,7 +19,7 @@ class CreateRoleRequestModel(SQLModel):
 
 
 class CreateRoleResponseModel(SQLModel):
-    id: str
+    id: int
     name: str
 
 
@@ -28,10 +28,10 @@ class UpdateRoleRequestModel(SQLModel):
 
 
 class UpdateRoleResponseModel(SQLModel):
-    id: str
+    id: int
     name: str
 
 
 class DeleteRoleResponseModel(SQLModel):
-    id: str
+    id: int
     name: str

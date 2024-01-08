@@ -27,18 +27,18 @@ class RegisteredClaims:
     iss: str | None = None
     sub: str | None = None
     aud: str | None = None
-    exp: float | None = field(default_factory=default_exp)
-    nbf: float | None = field(default_factory=default_nbf)
-    iat: float | None = field(default_factory=default_iat)
-    jti: str | None = field(default_factory=default_jti)
+    exp: float = field(default_factory=default_exp)
+    nbf: float = field(default_factory=default_nbf)
+    iat: float = field(default_factory=default_iat)
+    jti: str = field(default_factory=default_jti)
 
-    def _verify_iss(self, iss: str) -> bool:
+    def _verify_iss(self, iss: str | None) -> bool:
         return self.iss == iss
 
-    def _verify_sub(self, sub: str) -> bool:
+    def _verify_sub(self, sub: str | None) -> bool:
         return self.sub == sub
 
-    def _verify_aud(self, aud: str) -> bool:
+    def _verify_aud(self, aud: str | None) -> bool:
         return self.aud == aud
 
     def _verify_exp(self, now: float) -> bool:
@@ -50,7 +50,9 @@ class RegisteredClaims:
     def _verify_iat(self, now: float) -> bool:
         return self.iat < now
 
-    def verify(self, iss: str = None, sub: str = None, aud: str = None):
+    def verify(
+        self, iss: str | None = None, sub: str | None = None, aud: str | None = None
+    ) -> bool:
         now = datetime.utcnow().timestamp()
         verified_iss = self._verify_iss(iss=iss)
         verified_sub = self._verify_sub(sub=sub)

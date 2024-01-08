@@ -8,8 +8,8 @@ from src.testgate.email.constants import SMTP_EMAIL_ADDRESS, SMTP_EMAIL_APP_PASS
 
 class EmailService:
     def __init__(self):
-        self._email_subject: Optional[str] = None
-        self._email_from: Optional[str] = None
+        self._email_subject: str | None = None
+        self._email_from: str | None = None
         self._email_to: Optional[str] = None
         self._email_messages: Optional[MIMEMultipart] = MIMEMultipart("alternative")
         self._email_password: Optional[str] = None

@@ -1,13 +1,11 @@
 from typing import List
 from sqlmodel import Session
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 import src.testgate.user.service as user_service
 import src.testgate.role.service as role_service
-import src.testgate.repository.service as repository_service
 
-from src.testgate.user.models import User
 from src.testgate.email.service import EmailService
 from src.testgate.user.exceptions import (
     InvalidAccessTokenException,
@@ -18,12 +16,10 @@ from src.testgate.user.exceptions import (
     InvalidPasswordException,
     InvalidPasswordConfirmationException,
 )
-from src.testgate.repository.exceptions import RepositoryNotFoundException
 
 from src.testgate.user.schemas import (
     RetrieveUserResponseModel,
     RetrieveCurrentUserResponseModel,
-    RetrieveCurrentUserRepositoryResponseModel,
     UserQueryParametersModel,
     CreateUserResponseModel,
     UpdateUserResponseModel,
@@ -31,6 +27,7 @@ from src.testgate.user.schemas import (
     ChangeUserPasswordRequestModel,
     ChangeUserPasswordResponseModel,
     DeleteUserResponseModel,
+    DeleteCurrentUserResponseModel,
     CreateUserRequestModel,
     UpdateUserRequestModel,
 )
@@ -79,36 +76,11 @@ def retrieve_current_user(
     return retrieved_user
 
 
-class RolePermission:
-    def __init__(self, roles: list[str]):
-        self.roles = roles
-
-    def __call__(self, retrieved_user: User = Depends(retrieve_current_user)):
-        if retrieved_user.role.name not in self.roles:
-            raise HTTPException(status_code=403, detail="Operation not permitted")
-
-
-is_user_admin = RolePermission(roles=["Admin"])
-
-
-@router.get(
-    path="/api/v1/me/repositories",
-    response_model=RetrieveCurrentUserRepositoryResponseModel,
-    status_code=200,
-    summary="Retrieves current user repositories",
-)
-def retrieve_current_user_repository(*, retrieved_user=Depends(retrieve_current_user)):
-    """Retrieves current user repositories."""
-
-    return retrieved_user
-
-
 @router.get(
     path="/api/v1/users/{user_id}",
     response_model=RetrieveUserResponseModel,
     status_code=200,
     summary="Retrieves user by id",
-    dependencies=[Depends(is_user_admin)],
 )
 def retrieve_user_by_id(*, user_id: int | str, session: Session = Depends(get_session)):
     """Retrieves user by id."""
@@ -126,17 +98,17 @@ def retrieve_user_by_id(*, user_id: int | str, session: Session = Depends(get_se
     response_model=List[RetrieveUserResponseModel],
     status_code=200,
     summary="Retrieves user by query parameters",
-    dependencies=[Depends(is_user_admin)],
 )
 def retrieve_user_by_query_parameters(
     *,
     session: Session = Depends(get_session),
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
-    firstname: str = None,
-    lastname: str = None,
-    email: str = None,
-    role: str = Query(),
+    firstname: str = Query(default=None),
+    lastname: str = Query(default=None),
+    username: str = Query(default=None),
+    email: str = Query(default=None),
+    role: str = Query(default=None),
 ):
     """Retrieves user by query parameters."""
 
@@ -147,6 +119,7 @@ def retrieve_user_by_query_parameters(
         limit=limit,
         firstname=firstname,
         lastname=lastname,
+        username=username,
         email=email,
         role=role,
     )
@@ -163,7 +136,6 @@ def retrieve_user_by_query_parameters(
     response_model=CreateUserResponseModel,
     status_code=201,
     summary="Creates user",
-    dependencies=[Depends(is_user_admin)],
 )
 def create_user(
     *, session: Session = Depends(get_session), user: CreateUserRequestModel
@@ -219,7 +191,6 @@ def update_current_user(
     response_model=UpdateUserResponseModel,
     status_code=200,
     summary="Updates user by id",
-    dependencies=[Depends(is_user_admin)],
 )
 def update_user(
     *,
@@ -347,7 +318,7 @@ def send_user_verification_email(
 
 @router.delete(
     path="/api/v1/me",
-    response_model=DeleteUserResponseModel,
+    response_model=DeleteCurrentUserResponseModel,
     status_code=200,
     summary="Deletes current user",
 )
@@ -364,40 +335,10 @@ def delete_current_user(
 
 
 @router.delete(
-    path="/api/v1/me/repositories/{repository_id}",
-    response_model=DeleteUserResponseModel,
-    status_code=200,
-    summary="Deletes current user repository",
-)
-def delete_current_user_repository(
-    *,
-    repository_id: int | str,
-    session: Session = Depends(get_session),
-    retrieved_user=Depends(retrieve_current_user),
-):
-    """Deletes current user repository."""
-
-    retrieved_repository = repository_service.retrieve_by_id(
-        session=session, repository_id=repository_id
-    )
-
-    if not retrieved_repository:
-        raise RepositoryNotFoundException
-
-    if retrieved_repository not in retrieved_user.repositories:
-        raise RepositoryNotFoundException
-
-    retrieved_user.repositories.remove(retrieved_repository)
-
-    return retrieved_user
-
-
-@router.delete(
     path="/api/v1/users/{user_id}",
     response_model=DeleteUserResponseModel,
     status_code=200,
     summary="Deletes user",
-    dependencies=[Depends(is_user_admin)],
 )
 def delete_user(*, user_id: int | str, session: Session = Depends(get_session)):
     """Deletes user."""

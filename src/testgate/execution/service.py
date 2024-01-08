@@ -15,7 +15,7 @@ def create(
 
     created_execution = Execution()
     created_execution.name = execution.name
-    created_execution.result = ExecutionResult()
+    created_execution.result = execution.result
 
     session.add(created_execution)
     session.commit()
@@ -25,7 +25,7 @@ def create(
 
 
 def retrieve_by_id(*, session: Session, id: int) -> Optional[Execution]:
-    """Return a execution object based on the given id."""
+    """Returns an execution object based on the given id."""
 
     statement = select(Execution).where(Execution.id == id)
 
@@ -35,7 +35,7 @@ def retrieve_by_id(*, session: Session, id: int) -> Optional[Execution]:
 
 
 def retrieve_by_name(*, session: Session, name: str) -> Optional[Execution]:
-    """Return a execution object based on the given name."""
+    """Return an execution object based on the given name."""
 
     statement = select(Execution).where(Execution.name == name)
 
@@ -51,7 +51,7 @@ def retrieve_by_query_parameters(
 
     statement = select(Execution)
 
-    for attr, value in query_parameters.dict().items():
+    for attr, value in query_parameters.dict(exclude={"offset", "limit"}).items():
         if value:
             statement = statement.filter(getattr(Execution, attr).like(value))
 

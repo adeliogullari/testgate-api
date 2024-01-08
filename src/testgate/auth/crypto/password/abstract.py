@@ -11,7 +11,7 @@ class PasswordHashAlgorithm(ABC):
         pass
 
     @abstractmethod
-    def decode(self, encoded_password: bytes) -> Any:
+    def decode(self, encoded_password: bytes) -> dict:
         return json.loads(base64.b64decode(encoded_password).decode("utf-8"))
 
     @abstractmethod

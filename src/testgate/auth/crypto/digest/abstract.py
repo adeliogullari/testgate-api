@@ -1,7 +1,6 @@
 import json
 import base64
 import secrets
-from typing import Any
 from abc import ABC, abstractmethod
 
 
@@ -16,7 +15,7 @@ class MessageDigestAlgorithm(ABC):
         pass
 
     @abstractmethod
-    def decode(self, encoded_data: bytes) -> Any:
+    def decode(self, encoded_data: bytes) -> dict:
         return json.loads(base64.b64decode(encoded_data).decode("utf-8"))
 
     @abstractmethod

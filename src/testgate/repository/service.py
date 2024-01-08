@@ -13,14 +13,13 @@ def create(
 ) -> Optional[Repository]:
     """Creates a new permission object."""
 
-    created_permission = Repository()
-    created_permission.name = repository.name
+    created_repository = Repository(name=repository.name)
 
-    session.add(created_permission)
+    session.add(created_repository)
     session.commit()
-    session.refresh(created_permission)
+    session.refresh(created_repository)
 
-    return created_permission
+    return created_repository
 
 
 def retrieve_by_id(*, session: Session, repository_id: int) -> Optional[Repository]:
@@ -28,9 +27,9 @@ def retrieve_by_id(*, session: Session, repository_id: int) -> Optional[Reposito
 
     statement = select(Repository).where(Repository.id == repository_id)
 
-    retrieved_permission = session.exec(statement).one_or_none()
+    retrieved_repository = session.exec(statement).one_or_none()
 
-    return retrieved_permission
+    return retrieved_repository
 
 
 def retrieve_by_name(*, session: Session, repository_name: str) -> Optional[Repository]:
@@ -48,9 +47,12 @@ def retrieve_by_query_parameters(
 ) -> Optional[List[Repository]]:
     """Return list of repository objects based on the given query parameters."""
 
-    statement = select(Repository)
+    offset = query_parameters.offset
+    limit = query_parameters.limit
 
-    for attr, value in query_parameters.dict().items():
+    statement = select(Repository).offset(offset).limit(limit)
+
+    for attr, value in query_parameters.dict(exclude={'offset', 'limit', 'executions'}).items():
         if value:
             statement = statement.filter(getattr(Repository, attr).like(value))
 

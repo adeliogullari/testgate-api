@@ -1,12 +1,5 @@
-from typing import Optional
 from sqlmodel import SQLModel
-
-
-class SuiteResult(SQLModel):
-    total: int
-    passed: int
-    failed: int
-    skipped: int
+from src.testgate.suite.models import SuiteResult
 
 
 class RetrieveSuiteResponseModel(SQLModel):
@@ -16,27 +9,27 @@ class RetrieveSuiteResponseModel(SQLModel):
 
 class CreateSuiteRequestModel(SQLModel):
     name: str
-    result: Optional[SuiteResult]
+    result: SuiteResult
 
 
 class CreateSuiteResponseModel(SQLModel):
-    id: str
+    id: int
     name: str
-    result: Optional[SuiteResult]
+    result: SuiteResult
 
 
 class UpdateSuiteRequestModel(SQLModel):
     name: str
-    result: Optional[SuiteResult]
+    result: SuiteResult
 
 
 class UpdateSuiteResponseModel(SQLModel):
-    id: str
+    id: int
     name: str
-    result: Optional[SuiteResult]
+    result: SuiteResult
 
 
 class DeleteSuiteResponseModel(SQLModel):
-    id: str
+    id: int
     name: str
-    result: Optional[SuiteResult]
+    result: SuiteResult

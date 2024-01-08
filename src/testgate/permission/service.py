@@ -50,7 +50,7 @@ def retrieve_by_query_parameters(
 
     statement = select(Permission)
 
-    for attr, value in query_parameters.dict().items():
+    for attr, value in query_parameters.dict(exclude={"offset", "limit"}).items():
         if value:
             statement = statement.filter(getattr(Permission, attr).like(value))
 

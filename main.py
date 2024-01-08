@@ -16,10 +16,7 @@ from src.testgate.database.database import run_db_migrations, create_db_and_tabl
 
 tags_metadata = [
     {"name": "auth", "description": "Operations with auth"},
-    {
-        "name": "users",
-        "description": "Operations with users.",
-    },
+    {"name": "users", "description": "Operations with users."},
     {"name": "roles", "description": "Operations with roles."},
     {"name": "teams", "description": "Operations with teams."},
     {"name": "repository", "description": "Operations with repository"},
@@ -45,42 +42,6 @@ app.include_router(repository_router)
 app.include_router(execution_router)
 app.include_router(suite_router)
 app.include_router(case_router)
-
-
-# producer = KafkaProducer(bootstrap_servers='localhost:1234',
-#                          value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-# producer = AIOKafkaProducer(bootstrap_servers='localhost:9092',
-#                             value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-
-
-# async def send_one():
-#     producer = AIOKafkaProducer(bootstrap_servers='localhost:9092',
-#                                 value_serializer=lambda v: json.dumps(v).encode('utf-8'))
-#     await producer.start()
-#     try:
-#         await producer.send_and_wait("my_topic", {'key': 'value'})
-#     finally:
-#         await producer.stop()
-#
-# asyncio.run(send_one())
-#
-
-# async def consume():
-#     consumer = AIOKafkaConsumer('my_topic',
-#                                 'my_other_topic',
-#                                 bootstrap_servers='localhost:9092',
-#                                 group_id="my-group",
-#                                 value_deserializer=lambda v: json.loads(v.decode('utf-8')))
-#     await consumer.start()
-#     try:
-#         # Consume messages
-#         async for msg in consumer:
-#             print("consumed: ", msg.topic, msg.partition, msg.offset,
-#                   msg.key, msg.value, msg.timestamp)
-#     finally:
-#         await consumer.stop()
-#
-# asyncio.run(consume())
 
 
 @app.on_event("startup")

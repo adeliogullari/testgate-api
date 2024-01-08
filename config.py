@@ -1,31 +1,27 @@
 from typing import Optional
 from functools import lru_cache
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    testgate_jwt_access_token_exp_minutes: Optional[int]
-    testgate_jwt_access_token_key: Optional[str]
-    testgate_jwt_access_token_alg: Optional[str]
-    testgate_jwt_refresh_token_exp_days: Optional[int]
-    testgate_jwt_refresh_token_key: Optional[str]
-    testgate_jwt_refresh_token_alg: Optional[str]
-    testgate_postgresql_schema: Optional[str]
-    testgate_postgresql_user: Optional[str]
-    testgate_postgresql_password: Optional[str]
-    testgate_postgresql_host: Optional[str]
-    testgate_postgresql_port: Optional[str]
-    testgate_postgresql_database: Optional[str]
-    testgate_smtp_email_address: Optional[str]
-    testgate_smtp_email_app_password: Optional[str]
+    testgate_jwt_access_token_exp_minutes: int
+    testgate_jwt_access_token_key: str
+    testgate_jwt_access_token_alg: str
+    testgate_jwt_refresh_token_exp_days: int
+    testgate_jwt_refresh_token_key: str
+    testgate_jwt_refresh_token_alg: str
+    testgate_postgresql_schema: str
+    testgate_postgresql_user: str
+    testgate_postgresql_password: str
+    testgate_postgresql_host: str
+    testgate_postgresql_port: str
+    testgate_postgresql_database: str
+    testgate_smtp_email_verification: bool
+    testgate_smtp_email_address: str
+    testgate_smtp_email_app_password: str
 
     class Config:
         env_file = ".env"
-
-
-@lru_cache()
-def settings():
-    return Settings()
 
 
 @lru_cache()

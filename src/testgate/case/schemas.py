@@ -1,12 +1,5 @@
-from typing import Optional
 from sqlmodel import SQLModel
-
-
-class CaseResult(SQLModel):
-    total: int
-    passed: int
-    failed: int
-    skipped: int
+from src.testgate.case.models import CaseResult
 
 
 class RetrieveCaseResponseModel(SQLModel):
@@ -15,34 +8,40 @@ class RetrieveCaseResponseModel(SQLModel):
     description: str
 
 
+class CaseQueryParameters(SQLModel):
+    offset: int
+    limit: int
+    name: str
+
+
 class CreateCaseRequestModel(SQLModel):
     name: str
     description: str
-    result: Optional[CaseResult]
+    result: CaseResult
 
 
 class CreateCaseResponseModel(SQLModel):
-    id: str
+    id: int
     name: str
     description: str
-    result: Optional[CaseResult]
+    result: CaseResult
 
 
 class UpdateCaseRequestModel(SQLModel):
     name: str
     description: str
-    result: Optional[CaseResult]
+    result: CaseResult
 
 
 class UpdateCaseResponseModel(SQLModel):
-    id: str
+    id: int
     name: str
     description: str
-    result: Optional[CaseResult]
+    result: CaseResult
 
 
 class DeleteCaseResponseModel(SQLModel):
-    id: str
+    id: int
     name: str
     description: str
-    result: Optional[CaseResult]
+    result: CaseResult

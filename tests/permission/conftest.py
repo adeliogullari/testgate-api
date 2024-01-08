@@ -12,11 +12,3 @@ class PermissionFactory(SQLAlchemyModelFactory):
         sqlalchemy_session_persistence = "flush"
 
     name = Faker("name")
-
-
-@pytest.fixture(autouse=True)
-def set_session_for_permission_factory(db_session):
-    PermissionFactory._meta.sqlalchemy_session = db_session
-
-
-register(PermissionFactory)

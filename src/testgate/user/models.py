@@ -3,7 +3,7 @@ from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
 from src.testgate.role.models import Role
 from src.testgate.repository.models import Repository
-from src.testgate.link.models import UserRepositoryLink
+from src.testgate.database.models import UserRepositoryLink
 from src.testgate.auth.crypto.password.library import PasswordHashLibrary
 from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy
 
@@ -14,16 +14,16 @@ class User(SQLModel, table=True):
     __tablename__ = "user"
 
     id: int = Field(primary_key=True)
-    firstname: Optional[str] = Field(default=None)
-    lastname: Optional[str] = Field(default=None)
+    firstname: str | None = Field(default=None)
+    lastname: str | None = Field(default=None)
     username: str = Field(unique=True)
-    email: EmailStr = Field(unique=True)
-    password: Optional[str] = Field(default=None)
+    email: str = Field(unique=True)
+    password: str = Field(default=None)
     verified: bool = Field(default=False)
-    image: Optional[str] = Field(default=None)
-    role_id: Optional[int] = Field(default=None, foreign_key="role.id")
-    role: Optional[Role] = Relationship(back_populates="users")
-    repositories: List[Repository] = Relationship(
+    image: str | None = Field(default=None)
+    role_id: int | None = Field(default=None, foreign_key="role.id")
+    role: Role = Relationship(back_populates="users")
+    repositories: list[Repository] = Relationship(
         back_populates="users", link_model=UserRepositoryLink
     )
 
@@ -36,5 +36,5 @@ class User(SQLModel, table=True):
         )
 
 
-Role.update_forward_refs()
-Repository.update_forward_refs()
+Role.model_rebuild()
+Repository.model_rebuild()

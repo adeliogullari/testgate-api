@@ -1,36 +1,42 @@
-from typing import Optional
 from sqlmodel import SQLModel
 
 
 class RetrieveRepositoryResponse(SQLModel):
     id: int
     name: str
+    #executions: list[str] | None
 
 
 class RepositoryQueryParameters(SQLModel):
-    offset: Optional[int]
-    limit: Optional[int]
+    offset: int
+    limit: int
     name: str
+    # executions: list[str] | None
 
 
 class CreateRepositoryRequest(SQLModel):
     name: str
+    #executions: list[str] | None
 
 
 class CreateRepositoryResponse(SQLModel):
-    id: str
+    id: int
     name: str
+    # executions: list[str] | None
 
 
 class UpdateRepositoryRequest(SQLModel):
     name: str
+    # executions: list[str] | None
 
 
 class UpdateRepositoryResponse(SQLModel):
-    id: str
+    id: int
     name: str
+    # executions: list[str] | None
 
 
 class DeleteRepositoryResponse(SQLModel):
-    id: str
+    id: int
     name: str
+    #executions: list[str] | None

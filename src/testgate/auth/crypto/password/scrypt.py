@@ -15,9 +15,6 @@ class Scrypt(PasswordHashAlgorithm):
     maxmem = 0
     dklen = 64
 
-    def __init__(self):
-        pass
-
     def encode(self, password: str, salt: str = secrets.token_hex(64)) -> bytes:
         password_hash = hashlib.scrypt(
             password=password.encode("utf-8"),
@@ -44,8 +41,8 @@ class Scrypt(PasswordHashAlgorithm):
             ).encode("utf-8")
         )
 
-    def decode(self, encoded_password: bytes):
+    def decode(self, encoded_password: bytes) -> dict:
         return super().decode(encoded_password=encoded_password)
 
-    def verify(self, password: str, encoded_password: bytes):
+    def verify(self, password: str, encoded_password: bytes) -> bool:
         return super().verify(password=password, encoded_password=encoded_password)

@@ -16,10 +16,11 @@ class ExecutionResultFactory(SQLAlchemyModelFactory):
         sqlalchemy_session = None
         sqlalchemy_session_persistence = "flush"
 
-    total = 0
-    passed = 0
-    failed = 0
-    skipped = 0
+    id = 1
+    total = 15
+    passed = 5
+    failed = 5
+    skipped = 5
 
 
 class ExecutionFactory(SQLAlchemyModelFactory):
@@ -28,6 +29,7 @@ class ExecutionFactory(SQLAlchemyModelFactory):
         sqlalchemy_session = None
         sqlalchemy_session_persistence = "flush"
 
+    id = 1
     name = Faker("name")
     result = factory.SubFactory(ExecutionResultFactory)
 
@@ -35,13 +37,3 @@ class ExecutionFactory(SQLAlchemyModelFactory):
     def result_generation(self, create, extracted, **kwargs):
         if not create:
             self.result = self.result.__dict__
-
-
-@pytest.fixture(autouse=True)
-def set_session_for_execution_factory(db_session):
-    ExecutionResultFactory._meta.sqlalchemy_session = db_session
-    ExecutionFactory._meta.sqlalchemy_session = db_session
-
-
-register(ExecutionResultFactory)
-register(ExecutionFactory)

@@ -14,9 +14,6 @@ class Pbkdf2(PasswordHashAlgorithm):
     iterations = 600000
     dklen = 64
 
-    def __init__(self):
-        pass
-
     def encode(self, password: str, salt: str = secrets.token_hex(64)) -> bytes:
         password_hash = hashlib.pbkdf2_hmac(
             hash_name=self.hash_name,

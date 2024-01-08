@@ -8,8 +8,8 @@ class RetrievePermissionResponse(SQLModel):
 
 
 class PermissionQueryParameters(SQLModel):
-    offset: Optional[int]
-    limit: Optional[int]
+    offset: int
+    limit: int
     name: str
 
 
@@ -18,7 +18,7 @@ class CreatePermissionRequest(SQLModel):
 
 
 class CreatePermissionResponse(SQLModel):
-    id: str
+    id: int
     name: str
 
 
@@ -27,10 +27,10 @@ class UpdatePermissionRequest(SQLModel):
 
 
 class UpdatePermissionResponse(SQLModel):
-    id: str
+    id: int
     name: str
 
 
 class DeletePermissionResponse(SQLModel):
-    id: str
+    id: int
     name: str

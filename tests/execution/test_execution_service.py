@@ -35,7 +35,7 @@ def test_retrieve_by_name(db_session, execution):
 
 
 def test_retrieve_by_query_parameters(db_session, execution):
-    query_parameters = ExecutionQueryParameters(**execution.__dict__)
+    query_parameters = ExecutionQueryParameters(offset=0, limit=1, name=execution.name)
 
     retrieved_execution = retrieve_by_query_parameters(
         session=db_session, query_parameters=query_parameters

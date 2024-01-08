@@ -5,7 +5,7 @@ from src.testgate.auth.crypto.digest.strategy import Blake2bMessageDigestStrateg
 @pytest.mark.parametrize(
     "message_digest_library", [Blake2bMessageDigestStrategy()], indirect=True
 )
-def test_verify_with_valid_data_and_key(message_digest_library):
+def test_verify(message_digest_library):
     encoded_data = message_digest_library.encode(data="data", key="key")
     is_data_verified = message_digest_library.verify(
         data="data", key="key", encoded_data=encoded_data

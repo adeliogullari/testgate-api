@@ -6,30 +6,30 @@ if TYPE_CHECKING:
     from src.testgate.repository.models import Repository
 
 
+class ExecutionResult(SQLModel, table=True):
+    __tablename__ = "execution_result"
+
+    id: int = Field(primary_key=True)
+    total: int = Field(default=0)
+    passed: int = Field(default=0)
+    failed: int = Field(default=0)
+    skipped: int = Field(default=0)
+    execution_id: int | None = Field(default=None, foreign_key="execution.id")
+    execution: "Execution" = Relationship(back_populates="result")
+
+
 class Execution(SQLModel, table=True):
     __tablename__ = "execution"
 
     id: int = Field(primary_key=True)
     name: str = Field(unique=True)
-    repository_id: Optional[int] = Field(default=None, foreign_key="repository.id")
-    repository: Optional["Repository"] = Relationship(back_populates="executions")
-    suites: List[Suite] = Relationship(back_populates="execution")
-    result: Optional["ExecutionResult"] = Relationship(
+    repository_id: int | None = Field(default=None, foreign_key="repository.id")
+    repository: "Repository" = Relationship(back_populates="executions")
+    suites: list[Suite] = Relationship(back_populates="execution")
+    result: ExecutionResult = Relationship(
         back_populates="execution", sa_relationship_kwargs={"uselist": False}
     )
 
 
-class ExecutionResult(SQLModel, table=True):
-    __tablename__ = "execution_result"
-
-    id: int = Field(primary_key=True)
-    total: Optional[int] = Field(default=0)
-    passed: Optional[int] = Field(default=0)
-    failed: Optional[int] = Field(default=0)
-    skipped: Optional[int] = Field(default=0)
-    execution_id: Optional[int] = Field(default=None, foreign_key="execution.id")
-    execution: Optional[Execution] = Relationship(back_populates="result")
-
-
-Suite.update_forward_refs()
-Execution.update_forward_refs()
+Suite.model_rebuild()
+Execution.model_rebuild()

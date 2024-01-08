@@ -11,14 +11,7 @@ from .schemas import (
     UpdateExecutionResponse,
     DeleteExecutionResponse,
 )
-from .service import (
-    create,
-    retrieve_by_id,
-    retrieve_by_name,
-    retrieve_by_query_parameters,
-    update,
-    delete,
-)
+import src.testgate.execution.service as execution_service
 from src.testgate.database.service import get_session
 
 router = APIRouter(tags=["execution"])
@@ -32,7 +25,7 @@ router = APIRouter(tags=["execution"])
 def retrieve_execution_by_id(*, session: Session = Depends(get_session), id: int):
     """Retrieve execution by id."""
 
-    retrieved_execution = retrieve_by_id(session=session, id=id)
+    retrieved_execution = execution_service.retrieve_by_id(session=session, id=id)
 
     if not retrieved_execution:
         raise ExecutionNotFoundException
@@ -56,7 +49,7 @@ def retrieve_execution_by_query_parameters(
 
     query_execution = ExecutionQueryParameters(offset=offset, limit=limit, name=name)
 
-    retrieved_execution = retrieve_by_query_parameters(
+    retrieved_execution = execution_service.retrieve_by_query_parameters(
         session=session, query_parameters=query_execution
     )
 
@@ -71,12 +64,14 @@ def create_execution(
 ):
     """Creates execution."""
 
-    retrieved_execution = retrieve_by_name(session=session, name=execution.name)
+    retrieved_execution = execution_service.retrieve_by_name(
+        session=session, name=execution.name
+    )
 
     if retrieved_execution:
         raise ExecutionAlreadyExistsException
 
-    created_execution = create(session=session, execution=execution)
+    created_execution = execution_service.create(session=session, execution=execution)
 
     return created_execution
 
@@ -94,12 +89,12 @@ def update_execution(
 ):
     """Updates repository."""
 
-    retrieved_execution = retrieve_by_id(session=session, id=id)
+    retrieved_execution = execution_service.retrieve_by_id(session=session, id=id)
 
     if not retrieved_execution:
         raise ExecutionNotFoundException
 
-    updated_execution = update(
+    updated_execution = execution_service.update(
         session=session, retrieved_execution=retrieved_execution, execution=execution
     )
 
@@ -114,11 +109,13 @@ def update_execution(
 def delete_repository(*, session: Session = Depends(get_session), id: int):
     """Deletes execution."""
 
-    retrieved_execution = retrieve_by_id(session=session, id=id)
+    retrieved_execution = execution_service.retrieve_by_id(session=session, id=id)
 
     if not retrieved_execution:
         raise ExecutionNotFoundException
 
-    deleted_execution = delete(session=session, retrieved_execution=retrieved_execution)
+    deleted_execution = execution_service.delete(
+        session=session, retrieved_execution=retrieved_execution
+    )
 
     return deleted_execution

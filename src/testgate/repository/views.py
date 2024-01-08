@@ -21,11 +21,11 @@ from .service import (
 )
 from src.testgate.database.service import get_session
 
-router = APIRouter(tags=["repository"])
+router = APIRouter(tags=["repositories"])
 
 
 @router.get(
-    path="/api/v1/repository/{repository_id}",
+    path="/api/v1/repositories/{repository_id}",
     response_model=RetrieveRepositoryResponse,
     status_code=200,
 )
@@ -52,9 +52,9 @@ def retrieve_repository_by_query_parameters(
     session: Session = Depends(get_session),
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
-    name: str = None,
+    name: str = Query(default=None),
 ):
-    """Search repository by name."""
+    """Retrieves repository by query parameters."""
 
     query_repository = RepositoryQueryParameters(offset=offset, limit=limit, name=name)
 
@@ -88,7 +88,7 @@ def create_repository(
 
 
 @router.put(
-    path="/api/v1/repository/{repository_id}",
+    path="/api/v1/repositories/{repository_id}",
     response_model=UpdateRepositoryResponse,
     status_code=200,
 )
@@ -115,7 +115,7 @@ def update_repository(
 
 
 @router.delete(
-    path="/api/v1/repository/{repository_id}",
+    path="/api/v1/repositories/{repository_id}",
     response_model=DeleteRepositoryResponse,
     status_code=200,
 )

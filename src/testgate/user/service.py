@@ -1,6 +1,5 @@
 from typing import Optional, List
 from sqlmodel import select, Session
-
 from src.testgate.user.models import User
 from src.testgate.user.schemas import (
     UserQueryParametersModel,
@@ -10,7 +9,7 @@ from src.testgate.user.schemas import (
 from src.testgate.role.models import Role
 
 
-def retrieve_by_id(*, session: Session, user_id: int) -> Optional[User]:
+def retrieve_by_id(*, session: Session, user_id: int) -> User | None:
     """Returns a user object based on the given user id."""
 
     statement = select(User).where(User.id == user_id)
@@ -20,7 +19,7 @@ def retrieve_by_id(*, session: Session, user_id: int) -> Optional[User]:
     return retrieved_user
 
 
-def retrieve_by_username(*, session: Session, user_username: str) -> Optional[User]:
+def retrieve_by_username(*, session: Session, user_username: str) -> User | None:
     """Returns a user object based on the given user username."""
 
     statement = select(User).where(User.username == user_username)
@@ -30,7 +29,7 @@ def retrieve_by_username(*, session: Session, user_username: str) -> Optional[Us
     return retrieved_user
 
 
-def retrieve_by_email(*, session: Session, user_email: str) -> Optional[User]:
+def retrieve_by_email(*, session: Session, user_email: str) -> User | None:
     """Returns a user object based on the given user email."""
 
     statement = select(User).where(User.email == user_email)
@@ -51,11 +50,11 @@ def retrieve_by_query_parameters(
     statement = select(User).join(Role).offset(offset).limit(limit)
 
     for attr, value in query_parameters.dict(
-        exclude={"role"}, exclude_none=True
+        exclude={"offset", "limit"}, exclude_none=True
     ).items():
         statement = statement.where(getattr(User, attr) == value)
 
-    statement = statement.where(Role.name == query_parameters.role)
+    # statement = statement.where(Role.name == query_parameters.role)
 
     retrieved_user = session.exec(statement).all()
 
@@ -120,7 +119,7 @@ def update_password(
     return updated_user
 
 
-def verify(*, session: Session, retrieved_user: User) -> Optional[User]:
+def verify(*, session: Session, retrieved_user: User) -> User:
     """Verifies an existing user."""
 
     retrieved_user.verified = True

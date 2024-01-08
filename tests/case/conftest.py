@@ -1,33 +1,29 @@
-import pytest
 import factory
-from src.testgate.suite.models import Suite, SuiteResult
-from pytest_factoryboy import register
+from src.testgate.case.models import Case, CaseResult
 from factory.alchemy import SQLAlchemyModelFactory
 
 
-class SuiteResultFactory(SQLAlchemyModelFactory):
+class CaseResultFactory(SQLAlchemyModelFactory):
     class Meta:
-        model = SuiteResult
+        model = CaseResult
         sqlalchemy_session = None
         sqlalchemy_session_persistence = "flush"
 
-    id = 1
     total = 0
     passed = 0
     failed = 0
     skipped = 0
 
 
-class SuiteFactory(SQLAlchemyModelFactory):
+class CaseFactory(SQLAlchemyModelFactory):
     class Meta:
-        model = Suite
+        model = Case
         sqlalchemy_session = None
         sqlalchemy_session_persistence = "flush"
 
-    id = 1
-    name = "MySuite"
+    name = "MyCase"
     description = "Description"
-    result = factory.SubFactory(SuiteResultFactory)
+    result = factory.SubFactory(CaseResultFactory)
 
     @factory.post_generation
     def result_generation(self, create, extracted, **kwargs):
