@@ -2,6 +2,7 @@ from typing import List
 from sqlmodel import Session
 from fastapi import Query, Depends, APIRouter
 from .exceptions import ExecutionNotFoundException, ExecutionAlreadyExistsException
+from .models import Execution
 from .schemas import (
     RetrieveExecutionResponse,
     CreateExecutionRequest,
@@ -22,7 +23,9 @@ router = APIRouter(tags=["execution"])
     response_model=RetrieveExecutionResponse,
     status_code=200,
 )
-def retrieve_execution_by_id(*, session: Session = Depends(get_session), id: int):
+def retrieve_execution_by_id(
+    *, session: Session = Depends(get_session), id: int
+) -> Execution | None:
     """Retrieve execution by id."""
 
     retrieved_execution = execution_service.retrieve_by_id(session=session, id=id)
@@ -43,8 +46,8 @@ def retrieve_execution_by_query_parameters(
     session: Session = Depends(get_session),
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
-    name: str = None,
-):
+    name: str = Query(default=None),
+) -> list[Execution] | None:
     """Search execution by name."""
 
     query_execution = ExecutionQueryParameters(offset=offset, limit=limit, name=name)
@@ -61,7 +64,7 @@ def retrieve_execution_by_query_parameters(
 )
 def create_execution(
     *, session: Session = Depends(get_session), execution: CreateExecutionRequest
-):
+) -> Execution | None:
     """Creates execution."""
 
     retrieved_execution = execution_service.retrieve_by_name(
@@ -86,7 +89,7 @@ def update_execution(
     session: Session = Depends(get_session),
     id: int,
     execution: UpdateExecutionRequest,
-):
+) -> Execution | None:
     """Updates repository."""
 
     retrieved_execution = execution_service.retrieve_by_id(session=session, id=id)
@@ -106,7 +109,9 @@ def update_execution(
     response_model=DeleteExecutionResponse,
     status_code=200,
 )
-def delete_repository(*, session: Session = Depends(get_session), id: int):
+def delete_repository(
+    *, session: Session = Depends(get_session), id: int
+) -> Execution | None:
     """Deletes execution."""
 
     retrieved_execution = execution_service.retrieve_by_id(session=session, id=id)

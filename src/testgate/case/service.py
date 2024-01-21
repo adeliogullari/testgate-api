@@ -1,10 +1,10 @@
-from typing import Optional, List
+from typing import Optional, List, Any
 from sqlmodel import select, Session
 from .models import Case, CaseResult
 from .schemas import CreateCaseRequestModel, CaseQueryParameters, UpdateCaseRequestModel
 
 
-def create(*, session: Session, case: CreateCaseRequestModel) -> Optional[Case]:
+def create(*, session: Session, case: CreateCaseRequestModel) -> Case | None:
     """Creates a new case object."""
 
     created_case = Case()
@@ -19,10 +19,10 @@ def create(*, session: Session, case: CreateCaseRequestModel) -> Optional[Case]:
     return created_case
 
 
-def retrieve_by_id(*, session: Session, case_id: int) -> Optional[Case]:
+def retrieve_by_id(*, session: Session, case_id: int) -> Case | None:
     """Returns a case object based on the given id."""
 
-    statement = select(Case).where(Case.id == case_id)
+    statement: Any = select(Case).where(Case.id == case_id)
 
     retrieved_case = session.exec(statement).one_or_none()
 
@@ -31,15 +31,15 @@ def retrieve_by_id(*, session: Session, case_id: int) -> Optional[Case]:
 
 def retrieve_by_query_parameters(
     *, session: Session, query_parameters: CaseQueryParameters
-) -> Optional[List[Case]]:
+) -> List[Case] | None:
     """Return list of case objects based on the given query parameters."""
 
     offset = query_parameters.offset
     limit = query_parameters.limit
 
-    statement = select(Case).offset(offset).limit(limit)
+    statement: Any = select(Case).offset(offset).limit(limit)
 
-    for attr, value in query_parameters.dict(
+    for attr, value in query_parameters.model_dump(
         exclude={"offset", "limit"}, exclude_none=True
     ).items():
         statement = statement.where(getattr(Case, attr) == value)
@@ -51,7 +51,7 @@ def retrieve_by_query_parameters(
 
 def update(
     *, session: Session, retrieved_case: Case, case: UpdateCaseRequestModel
-) -> Optional[Case]:
+) -> Case | None:
     """Updates an existing case object."""
 
     retrieved_case.name = case.name
@@ -66,7 +66,7 @@ def update(
     return updated_case
 
 
-def delete(*, session: Session, retrieved_case: Case) -> Optional[Case]:
+def delete(*, session: Session, retrieved_case: Case) -> Case | None:
     """Deletes an existing case object."""
 
     session.delete(retrieved_case)

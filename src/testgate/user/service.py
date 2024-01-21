@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Any, Optional, List
 from sqlmodel import select, Session
 from src.testgate.user.models import User
 from src.testgate.user.schemas import (
@@ -6,13 +6,14 @@ from src.testgate.user.schemas import (
     CreateUserRequestModel,
     UpdateUserRequestModel,
 )
+from src.testgate.repository.models import Repository
 from src.testgate.role.models import Role
 
 
 def retrieve_by_id(*, session: Session, user_id: int) -> User | None:
     """Returns a user object based on the given user id."""
 
-    statement = select(User).where(User.id == user_id)
+    statement: Any = select(User).where(User.id == user_id)
 
     retrieved_user = session.exec(statement).one_or_none()
 
@@ -22,7 +23,7 @@ def retrieve_by_id(*, session: Session, user_id: int) -> User | None:
 def retrieve_by_username(*, session: Session, user_username: str) -> User | None:
     """Returns a user object based on the given user username."""
 
-    statement = select(User).where(User.username == user_username)
+    statement: Any = select(User).where(User.username == user_username)
 
     retrieved_user = session.exec(statement).one_or_none()
 
@@ -32,7 +33,7 @@ def retrieve_by_username(*, session: Session, user_username: str) -> User | None
 def retrieve_by_email(*, session: Session, user_email: str) -> User | None:
     """Returns a user object based on the given user email."""
 
-    statement = select(User).where(User.email == user_email)
+    statement: Any = select(User).where(User.email == user_email)
 
     retrieved_user = session.exec(statement).one_or_none()
 
@@ -47,14 +48,12 @@ def retrieve_by_query_parameters(
     offset = query_parameters.offset
     limit = query_parameters.limit
 
-    statement = select(User).join(Role).offset(offset).limit(limit)
+    statement: Any = select(User).join(Role).offset(offset).limit(limit)
 
-    for attr, value in query_parameters.dict(
+    for attr, value in query_parameters.model_dump(
         exclude={"offset", "limit"}, exclude_none=True
     ).items():
         statement = statement.where(getattr(User, attr) == value)
-
-    # statement = statement.where(Role.name == query_parameters.role)
 
     retrieved_user = session.exec(statement).all()
 

@@ -11,7 +11,7 @@ class PasswordHashLibrary:
         return self._strategy
 
     @strategy.setter
-    def strategy(self, strategy):
+    def strategy(self, strategy: PasswordHashStrategy) -> None:
         self._strategy = strategy
 
     def encode(self, password: str, salt: str = secrets.token_hex(64)) -> bytes:

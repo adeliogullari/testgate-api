@@ -1,6 +1,6 @@
-import uuid
+import random
 
-INVALID_USER_ID = uuid.uuid4()
+INVALID_USER_ID = random.randint(1, 1000)
 
 
 def test_retrieve_case_by_id(client, case):

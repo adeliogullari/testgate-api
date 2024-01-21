@@ -25,7 +25,7 @@ class UserFactory(SQLAlchemyModelFactory):
     lastname = Faker("last_name")
     username = Faker("user_name")
     email = Faker("email")
-    password = Faker("password")
+    password = b""  # Faker("password")
     verified = False
     image = Faker("name")
     role = factory.SubFactory(RoleFactory)

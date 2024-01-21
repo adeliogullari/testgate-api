@@ -11,6 +11,7 @@ from .schemas import (
     UpdatePermissionResponse,
     DeletePermissionResponse,
 )
+from .models import Permission
 from .service import (
     create,
     retrieve_by_id,
@@ -29,7 +30,9 @@ router = APIRouter(tags=["permissions"])
     response_model=RetrievePermissionResponse,
     status_code=200,
 )
-def retrieve_permission_by_id(*, session: Session = Depends(get_session), id: int):
+def retrieve_permission_by_id(
+    *, session: Session = Depends(get_session), id: int
+) -> Permission | None:
     """Retrieve permission by id."""
 
     retrieved_permission = retrieve_by_id(session=session, id=id)
@@ -50,8 +53,8 @@ def retrieve_permission_by_query_parameters(
     session: Session = Depends(get_session),
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
-    name: str = None,
-):
+    name: str = Query(default=None),
+) -> list[Permission] | None:
     """Search permission by name."""
 
     query_parameters = PermissionQueryParameters(offset=offset, limit=limit, name=name)
@@ -68,7 +71,7 @@ def retrieve_permission_by_query_parameters(
 )
 def create_permission(
     *, session: Session = Depends(get_session), permission: CreatePermissionRequest
-):
+) -> Permission | None:
     """Creates permission."""
 
     retrieved_permission = retrieve_by_name(session=session, name=permission.name)
@@ -91,7 +94,7 @@ def update_permission(
     session: Session = Depends(get_session),
     id: int,
     permission: UpdatePermissionRequest,
-):
+) -> Permission | None:
     """Updates permission."""
 
     retrieved_permission = retrieve_by_id(session=session, id=id)
@@ -113,7 +116,9 @@ def update_permission(
     response_model=DeletePermissionResponse,
     status_code=200,
 )
-def delete_permission(*, session: Session = Depends(get_session), id: int):
+def delete_permission(
+    *, session: Session = Depends(get_session), id: int
+) -> Permission | None:
     """Deletes permission."""
 
     retrieved_permission = retrieve_by_id(session=session, id=id)

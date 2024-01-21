@@ -11,7 +11,7 @@ class MessageDigestLibrary:
         return self._strategy
 
     @strategy.setter
-    def strategy(self, strategy):
+    def strategy(self, strategy: MessageDigestStrategy) -> None:
         self._strategy = strategy
 
     def encode(

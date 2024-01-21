@@ -1,10 +1,15 @@
 import uuid
+import random
 import pytest
+from src.testgate.auth.crypto.password.library import PasswordHashLibrary
+from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy
 
 INVALID_ACCESS_TOKEN = uuid.uuid4()
-INVALID_USER_ID = uuid.uuid4()
+INVALID_USER_ID = random.randint(1, 1000)
 
 invalid_headers = {"Authorization": f"bearer {INVALID_ACCESS_TOKEN}"}
+
+password_pash_library = PasswordHashLibrary(ScryptPasswordHashStrategy())
 
 
 def test_retrieve_current_user(client, user, headers):
@@ -37,7 +42,7 @@ def test_retrieve_user_by_invalid_id(client, headers):
 
 def test_create_user(client, user_factory, headers):
     response = client.post(
-        url="/api/v1/users", json=user_factory.stub().__dict__, headers=headers
+        url="/api/v1/users", json=user_factory.stub(password="password_2024").__dict__, headers=headers
     )
 
     assert response.status_code == 201
@@ -46,7 +51,7 @@ def test_create_user(client, user_factory, headers):
 def test_create_user_with_existing_username(client, user_factory, user, headers):
     response = client.post(
         url="/api/v1/users",
-        json=user_factory.stub(username=user.username).__dict__,
+        json=user_factory.stub(username=user.username, password="password_2024").__dict__,
         headers=headers,
     )
 
@@ -56,7 +61,7 @@ def test_create_user_with_existing_username(client, user_factory, user, headers)
 def test_create_user_with_existing_email(client, user_factory, user, headers):
     response = client.post(
         url="/api/v1/users",
-        json=user_factory.stub(email=user.email).__dict__,
+        json=user_factory.stub(email=user.email, password="password_2024").__dict__,
         headers=headers,
     )
 
@@ -65,7 +70,7 @@ def test_create_user_with_existing_email(client, user_factory, user, headers):
 
 def test_update_current_user(client, user_factory, user, headers):
     response = client.put(
-        url="/api/v1/me", json=user_factory.stub().__dict__, headers=headers
+        url="/api/v1/me", json=user_factory.stub(password="password_2024").__dict__, headers=headers
     )
 
     assert response.status_code == 200
@@ -74,7 +79,7 @@ def test_update_current_user(client, user_factory, user, headers):
 
 def test_update_current_user_with_invalid_token(client, user_factory):
     response = client.put(
-        url="/api/v1/me", json=user_factory.stub().__dict__, headers=invalid_headers
+        url="/api/v1/me", json=user_factory.stub(password="password_2024").__dict__, headers=invalid_headers
     )
 
     assert response.status_code == 403
@@ -83,7 +88,7 @@ def test_update_current_user_with_invalid_token(client, user_factory):
 def test_update_user(client, user_factory, user, headers):
     response = client.put(
         url=f"/api/v1/users/{user.id}",
-        json=user_factory.stub().__dict__,
+        json=user_factory.stub(password="password_2024").__dict__,
         headers=headers,
     )
 
@@ -94,7 +99,7 @@ def test_update_user(client, user_factory, user, headers):
 def test_update_user_by_invalid_id(client, user_factory, headers):
     response = client.put(
         url=f"/api/v1/users/{INVALID_USER_ID}",
-        json=user_factory.stub().__dict__,
+        json=user_factory.stub(password="password_2024").__dict__,
         headers=headers,
     )
 
@@ -114,8 +119,8 @@ def test_verify_current_user_with_invalid_token(client):
     assert response.status_code == 403
 
 
-@pytest.mark.parametrize("user__password", ["password_2024"])
-def test_change_current_user_password(client, user, headers):
+@pytest.mark.parametrize("user__password", [password_pash_library.encode("password_2024")])
+def test_update_current_user_password(client, user, headers):
     response = client.put(
         url="/api/v1/me/change-password",
         json={
@@ -130,7 +135,7 @@ def test_change_current_user_password(client, user, headers):
     assert response.json()["id"] == user.id
 
 
-def test_change_current_user_password_with_invalid_token(client):
+def test_update_current_user_password_with_invalid_token(client):
     response = client.put(
         url="/api/v1/me/change-password",
         json={

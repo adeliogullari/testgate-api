@@ -4,7 +4,7 @@ from sqlmodel import SQLModel
 class RetrieveRepositoryResponse(SQLModel):
     id: int
     name: str
-    #executions: list[str] | None
+    # executions: list[str] | None
 
 
 class RepositoryQueryParameters(SQLModel):
@@ -16,7 +16,7 @@ class RepositoryQueryParameters(SQLModel):
 
 class CreateRepositoryRequest(SQLModel):
     name: str
-    #executions: list[str] | None
+    # executions: list[str] | None
 
 
 class CreateRepositoryResponse(SQLModel):
@@ -39,4 +39,4 @@ class UpdateRepositoryResponse(SQLModel):
 class DeleteRepositoryResponse(SQLModel):
     id: int
     name: str
-    #executions: list[str] | None
+    # executions: list[str] | None

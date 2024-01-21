@@ -2,6 +2,7 @@ import json
 import base64
 import hashlib
 import secrets
+from typing import Any
 from hashlib import blake2b
 from .abstract import MessageDigestAlgorithm
 
@@ -36,8 +37,8 @@ class Blake2b(MessageDigestAlgorithm):
             ).encode("utf-8")
         )
 
-    def decode(self, encoded_data: bytes):
+    def decode(self, encoded_data: bytes) -> dict[Any, Any]:
         return super().decode(encoded_data=encoded_data)
 
-    def verify(self, data: str, key: str, encoded_data: bytes):
+    def verify(self, data: str, key: str, encoded_data: bytes) -> bool:
         return super().verify(data=data, key=key, encoded_data=encoded_data)

@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Any
 from sqlmodel import select, Session
 from src.testgate.execution.models import Execution, ExecutionResult
 from src.testgate.execution.schemas import (
@@ -27,7 +27,7 @@ def create(
 def retrieve_by_id(*, session: Session, id: int) -> Optional[Execution]:
     """Returns an execution object based on the given id."""
 
-    statement = select(Execution).where(Execution.id == id)
+    statement: Any = select(Execution).where(Execution.id == id)
 
     retrieved_execution = session.exec(statement).one_or_none()
 
@@ -37,7 +37,7 @@ def retrieve_by_id(*, session: Session, id: int) -> Optional[Execution]:
 def retrieve_by_name(*, session: Session, name: str) -> Optional[Execution]:
     """Return an execution object based on the given name."""
 
-    statement = select(Execution).where(Execution.name == name)
+    statement: Any = select(Execution).where(Execution.name == name)
 
     retrieved_execution = session.exec(statement).one_or_none()
 
@@ -49,9 +49,9 @@ def retrieve_by_query_parameters(
 ) -> Optional[List[Execution]]:
     """Return list of execution objects based on the given query parameters."""
 
-    statement = select(Execution)
+    statement: Any = select(Execution)
 
-    for attr, value in query_parameters.dict(exclude={"offset", "limit"}).items():
+    for attr, value in query_parameters.model_dump(exclude={"offset", "limit"}).items():
         if value:
             statement = statement.filter(getattr(Execution, attr).like(value))
 

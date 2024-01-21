@@ -1,4 +1,4 @@
-from typing import List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from sqlmodel import SQLModel, Field, Relationship
 from src.testgate.permission.models import Permission
 from src.testgate.database.models import RolePermissionLink

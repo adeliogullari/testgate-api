@@ -4,10 +4,12 @@ from typing import Any
 from abc import ABC, abstractmethod
 from .claims import Payload
 from secrets import compare_digest
+from src.testgate.auth.crypto.digest.strategy import (
+    Blake2bMessageDigestStrategy,
+    MessageDigestStrategy,
+)
 from src.testgate.auth.crypto.digest.blake2b import Blake2b
 from src.testgate.auth.crypto.digest.library import MessageDigestLibrary
-from src.testgate.auth.crypto.digest.strategy import Blake2bMessageDigestStrategy
-from src.testgate.auth.crypto.digest.strategy import MessageDigestStrategy
 
 blake2b = Blake2b()
 message_digest_library = MessageDigestLibrary(Blake2bMessageDigestStrategy())
@@ -22,30 +24,30 @@ class AuthenticationToken(ABC):
         return self._strategy
 
     @strategy.setter
-    def strategy(self, strategy):
+    def strategy(self, strategy: MessageDigestStrategy) -> None:
         self._strategy = strategy
 
-    def _b64encode_payload(self, payload: dict[str, Any]):
+    def _b64encode_payload(self, payload: Any) -> bytes:
         return base64.b64encode(json.dumps(payload).encode("utf-8"))
 
-    def _b64encode_headers(self, headers: dict[str, Any]):
+    def _b64encode_headers(self, headers: Any) -> bytes:
         return base64.b64encode(json.dumps(headers).encode("utf-8"))
 
-    def _b64decode_payload(self, payload: bytes):
+    def _b64decode_payload(self, payload: str) -> Any:
         return json.loads(base64.b64decode(payload))
 
-    def _b64decode_headers(self, headers: bytes):
+    def _b64decode_headers(self, headers: str) -> Any:
         return json.loads(base64.b64decode(headers))
 
     @abstractmethod
-    def encode(self, payload: dict[str, Any], key: str, headers: dict[str, Any]) -> str:
+    def encode(self, payload: Any, key: str, headers: Any) -> str:
         payload = self._b64encode_payload(payload)
         headers = self._b64encode_headers(headers)
         signature = message_digest_library.encode(data=f"{payload}.{headers}", key=key)
         return b".".join([payload, headers, signature]).decode("utf-8")
 
     @abstractmethod
-    def decode(self, token: str) -> tuple:
+    def decode(self, token: str) -> tuple[Any, Any, Any]:
         payload, headers, signature = token.split(".")
         payload = self._b64decode_payload(payload)
         headers = self._b64decode_headers(headers)
@@ -75,7 +77,7 @@ class AuthenticationToken(ABC):
         iss: str | None = None,
         sub: str | None = None,
         aud: str | None = None,
-    ) -> tuple:
+    ) -> tuple[bool, Any, Any, Any]:
         try:
             verified = self.verify(key=key, token=token, iss=iss, sub=sub, aud=aud)
             payload, headers, signature = self.decode(token=token)

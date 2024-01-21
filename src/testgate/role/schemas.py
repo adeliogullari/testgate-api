@@ -14,6 +14,12 @@ class RetrieveRoleResponseModel(SQLModel):
     users: list[User]
 
 
+class RoleQueryParameters(SQLModel):
+    offset: int
+    limit: int
+    name: str
+
+
 class CreateRoleRequestModel(SQLModel):
     name: str
 

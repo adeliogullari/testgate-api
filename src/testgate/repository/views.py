@@ -2,6 +2,7 @@ from typing import List
 from sqlmodel import Session
 from fastapi import Query, Depends, APIRouter
 from .exceptions import RepositoryNotFoundException, RepositoryAlreadyExistsException
+from .models import Repository
 from .schemas import (
     RetrieveRepositoryResponse,
     CreateRepositoryRequest,
@@ -31,7 +32,7 @@ router = APIRouter(tags=["repositories"])
 )
 def retrieve_repository_by_id(
     *, session: Session = Depends(get_session), repository_id: int
-):
+) -> Repository | None:
     """Retrieve repository by id."""
 
     retrieved_repository = retrieve_by_id(session=session, repository_id=repository_id)
@@ -53,7 +54,7 @@ def retrieve_repository_by_query_parameters(
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
     name: str = Query(default=None),
-):
+) -> list[Repository] | None:
     """Retrieves repository by query parameters."""
 
     query_repository = RepositoryQueryParameters(offset=offset, limit=limit, name=name)
@@ -72,7 +73,7 @@ def retrieve_repository_by_query_parameters(
 )
 def create_repository(
     *, session: Session = Depends(get_session), repository: CreateRepositoryRequest
-):
+) -> Repository | None:
     """Creates repository."""
 
     retrieved_repository = retrieve_by_name(
@@ -97,7 +98,7 @@ def update_repository(
     session: Session = Depends(get_session),
     repository_id: int,
     repository: UpdateRepositoryRequest,
-):
+) -> Repository | None:
     """Updates repository."""
 
     retrieved_repository = retrieve_by_id(session=session, repository_id=repository_id)
@@ -119,7 +120,9 @@ def update_repository(
     response_model=DeleteRepositoryResponse,
     status_code=200,
 )
-def delete_repository(*, session: Session = Depends(get_session), repository_id: int):
+def delete_repository(
+    *, session: Session = Depends(get_session), repository_id: int
+) -> Repository | None:
     """Deletes repository."""
 
     retrieved_repository = retrieve_by_id(session=session, repository_id=repository_id)

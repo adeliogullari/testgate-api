@@ -1,6 +1,8 @@
 from typing import List
 from sqlmodel import Session
-from fastapi import status, Depends, APIRouter, HTTPException
+from fastapi import status, Depends, APIRouter, HTTPException, Query
+
+from .models import Role
 from .service import (
     retrieve_by_id,
     retrieve_by_name,
@@ -11,6 +13,7 @@ from .service import (
 )
 from .schemas import (
     RetrieveRoleResponseModel,
+    RoleQueryParameters,
     CreateRoleRequestModel,
     CreateRoleResponseModel,
     UpdateRoleRequestModel,
@@ -35,7 +38,9 @@ RoleAlreadyExistsException = HTTPException(
     response_model=None,
     status_code=200,
 )
-def retrieve_role_by_id(*, session: Session = Depends(get_session), id: int):
+def retrieve_role_by_id(
+    *, session: Session = Depends(get_session), id: int
+) -> Role | None:
     """Retrieve role by id."""
 
     retrieved_role = retrieve_by_id(session=session, id=id)
@@ -52,12 +57,18 @@ def retrieve_role_by_id(*, session: Session = Depends(get_session), id: int):
     status_code=200,
 )
 def retrieve_role_by_query_parameters(
-    *, session: Session = Depends(get_session), name: str = None
-):
+    *,
+    session: Session = Depends(get_session),
+    offset: int = 0,
+    limit: int = Query(default=100, lte=100),
+    name: str = Query(default=None),
+) -> list[Role] | None:
     """Search role by name."""
 
+    query_parameters = RoleQueryParameters(offset=offset, limit=limit, name=name)
+
     retrieved_role = retrieve_by_query_parameters(
-        session=session, query_parameters={"name": name}
+        session=session, query_parameters=query_parameters
     )
 
     return retrieved_role
@@ -70,7 +81,7 @@ def retrieve_role_by_query_parameters(
 )
 def create_role(
     *, session: Session = Depends(get_session), role: CreateRoleRequestModel
-):
+) -> Role | None:
     """Creates role."""
 
     retrieved_role = retrieve_by_name(session=session, name=role.name)
@@ -90,7 +101,7 @@ def create_role(
 )
 def update_role(
     *, session: Session = Depends(get_session), id: int, role: UpdateRoleRequestModel
-):
+) -> Role | None:
     """Updates role."""
 
     retrieved_role = retrieve_by_id(session=session, id=id)
@@ -108,7 +119,7 @@ def update_role(
     response_model=DeleteRoleResponseModel,
     status_code=200,
 )
-def delete_role(*, session: Session = Depends(get_session), id: int):
+def delete_role(*, session: Session = Depends(get_session), id: int) -> Role | None:
     """Deletes role."""
 
     retrieved_role = retrieve_by_id(session=session, id=id)

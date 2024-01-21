@@ -59,7 +59,7 @@ class RegisterCredentials(SQLModel):
     email: str
     password: str
 
-    @field_validator("password")
+    @field_validator("password", mode="after", check_fields=True)
     def generate_password(cls, val: str, info: ValidationInfo) -> bytes:
         return password_hash_library.encode(val)
 

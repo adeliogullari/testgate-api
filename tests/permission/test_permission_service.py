@@ -35,9 +35,9 @@ def test_retrieve_by_name(db_session, permission):
 
 
 def test_retrieve_by_query_parameters(db_session, permission):
-    query_parameters = PermissionQueryParameters(offset=0,
-                                                 limit=1,
-                                                 name=permission.name)
+    query_parameters = PermissionQueryParameters(
+        offset=0, limit=1, name=permission.name
+    )
 
     retrieved_permission = retrieve_by_query_parameters(
         session=db_session, query_parameters=query_parameters

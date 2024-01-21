@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Any
 from sqlmodel import select, Session
 from src.testgate.repository.models import Repository
 from src.testgate.repository.schemas import (
@@ -25,7 +25,7 @@ def create(
 def retrieve_by_id(*, session: Session, repository_id: int) -> Optional[Repository]:
     """Return a repository object based on the given id."""
 
-    statement = select(Repository).where(Repository.id == repository_id)
+    statement: Any = select(Repository).where(Repository.id == repository_id)
 
     retrieved_repository = session.exec(statement).one_or_none()
 
@@ -35,7 +35,7 @@ def retrieve_by_id(*, session: Session, repository_id: int) -> Optional[Reposito
 def retrieve_by_name(*, session: Session, repository_name: str) -> Optional[Repository]:
     """Return a repository object based on the given name."""
 
-    statement = select(Repository).where(Repository.name == repository_name)
+    statement: Any = select(Repository).where(Repository.name == repository_name)
 
     retrieved_repository = session.exec(statement).one_or_none()
 
@@ -50,9 +50,11 @@ def retrieve_by_query_parameters(
     offset = query_parameters.offset
     limit = query_parameters.limit
 
-    statement = select(Repository).offset(offset).limit(limit)
+    statement: Any = select(Repository).offset(offset).limit(limit)
 
-    for attr, value in query_parameters.dict(exclude={'offset', 'limit', 'executions'}).items():
+    for attr, value in query_parameters.model_dump(
+        exclude={"offset", "limit", "executions"}
+    ).items():
         if value:
             statement = statement.filter(getattr(Repository, attr).like(value))
 

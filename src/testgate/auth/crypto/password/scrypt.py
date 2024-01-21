@@ -2,6 +2,7 @@ import json
 import base64
 import hashlib
 import secrets
+from typing import Any
 from .abstract import PasswordHashAlgorithm
 
 
@@ -41,7 +42,7 @@ class Scrypt(PasswordHashAlgorithm):
             ).encode("utf-8")
         )
 
-    def decode(self, encoded_password: bytes) -> dict:
+    def decode(self, encoded_password: bytes) -> dict[Any, Any]:
         return super().decode(encoded_password=encoded_password)
 
     def verify(self, password: str, encoded_password: bytes) -> bool:

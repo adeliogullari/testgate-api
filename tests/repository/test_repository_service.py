@@ -39,7 +39,9 @@ def test_retrieve_by_name(db_session, repository):
 
 
 def test_retrieve_by_query_parameters(db_session, repository):
-    query_parameters = RepositoryQueryParameters(offset=0, limit=1, name=repository.name)
+    query_parameters = RepositoryQueryParameters(
+        offset=0, limit=1, name=repository.name
+    )
 
     retrieved_repository = retrieve_by_query_parameters(
         session=db_session, query_parameters=query_parameters

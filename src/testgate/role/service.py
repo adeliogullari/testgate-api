@@ -1,10 +1,10 @@
-from typing import Optional, List
+from typing import Any
 from sqlmodel import select, Session
 from .models import Role
-from .schemas import CreateRoleRequestModel, UpdateRoleRequestModel
+from .schemas import CreateRoleRequestModel, RoleQueryParameters, UpdateRoleRequestModel
 
 
-def create(*, session: Session, role: CreateRoleRequestModel) -> Optional[Role]:
+def create(*, session: Session, role: CreateRoleRequestModel) -> Role | None:
     """Creates a new role object."""
 
     created_role = Role()
@@ -17,20 +17,20 @@ def create(*, session: Session, role: CreateRoleRequestModel) -> Optional[Role]:
     return created_role
 
 
-def retrieve_by_id(*, session: Session, id: int) -> Optional[Role]:
+def retrieve_by_id(*, session: Session, id: int) -> Role | None:
     """Return a role object based on the given id."""
 
-    statement = select(Role).where(Role.id == id)
+    statement: Any = select(Role).where(Role.id == id)
 
     retrieved_role = session.exec(statement).one_or_none()
 
     return retrieved_role
 
 
-def retrieve_by_name(*, session: Session, name: str) -> Optional[Role]:
+def retrieve_by_name(*, session: Session, name: str) -> Role | None:
     """Return a role object based on the given name."""
 
-    statement = select(Role).where(Role.name == name)
+    statement: Any = select(Role).where(Role.name == name)
 
     retrieved_role = session.exec(statement).one_or_none()
 
@@ -38,15 +38,19 @@ def retrieve_by_name(*, session: Session, name: str) -> Optional[Role]:
 
 
 def retrieve_by_query_parameters(
-    *, session: Session, query_parameters: dict
-) -> Optional[List[Role]]:
+    *, session: Session, query_parameters: RoleQueryParameters
+) -> list[Role] | None:
     """Return list of role objects based on the given query parameters."""
 
-    statement = select(Role)
+    offset = query_parameters.offset
+    limit = query_parameters.limit
 
-    for attr, value in query_parameters.items():
-        if value:
-            statement = statement.filter(getattr(Role, attr).like(value))
+    statement: Any = select(Role).offset(offset).limit(limit)
+
+    for attr, value in query_parameters.model_dump(
+        exclude={"offset", "limit"}, exclude_none=True
+    ).items():
+        statement = statement.filter(getattr(Role, attr).like(value))
 
     retrieved_roles = session.exec(statement).all()
 
@@ -55,7 +59,7 @@ def retrieve_by_query_parameters(
 
 def update(
     *, session: Session, retrieved_role: Role, role: UpdateRoleRequestModel
-) -> Optional[Role]:
+) -> Role | None:
     """Updates an existing role object."""
 
     retrieved_role.name = role.name
@@ -68,7 +72,7 @@ def update(
     return updated_role
 
 
-def delete(*, session: Session, retrieved_role: Role) -> Optional[Role]:
+def delete(*, session: Session, retrieved_role: Role) -> Role | None:
     """Deletes an existing role object."""
 
     session.delete(retrieved_role)

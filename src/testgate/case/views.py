@@ -10,6 +10,7 @@ from .schemas import (
     UpdateCaseResponseModel,
     DeleteCaseResponseModel,
 )
+from .models import Case
 from src.testgate.database.service import get_session
 
 router = APIRouter(tags=["cases"])
@@ -20,7 +21,9 @@ router = APIRouter(tags=["cases"])
     response_model=RetrieveCaseResponseModel,
     status_code=200,
 )
-def retrieve_case_by_id(*, session: Session = Depends(get_session), case_id: int | str):
+def retrieve_case_by_id(
+    *, session: Session = Depends(get_session), case_id: int
+) -> Case | None:
     """Retrieve case by id."""
     retrieved_case = retrieve_by_id(session=session, case_id=case_id)
 
@@ -37,7 +40,7 @@ def retrieve_case_by_id(*, session: Session = Depends(get_session), case_id: int
 )
 def create_case(
     *, session: Session = Depends(get_session), case: CreateCaseRequestModel
-):
+) -> Case | None:
     """Creates case."""
 
     created_case = create(session=session, case=case)
@@ -53,9 +56,9 @@ def create_case(
 def update_case(
     *,
     session: Session = Depends(get_session),
-    case_id: int | str,
+    case_id: int,
     case: UpdateCaseRequestModel,
-):
+) -> Case | None:
     """Updates case."""
 
     retrieved_case = retrieve_by_id(session=session, case_id=case_id)
@@ -73,7 +76,9 @@ def update_case(
     response_model=DeleteCaseResponseModel,
     status_code=200,
 )
-def delete_suite(*, session: Session = Depends(get_session), case_id: int | str):
+def delete_suite(
+    *, session: Session = Depends(get_session), case_id: int
+) -> Case | None:
     """Deletes case."""
 
     retrieved_case = retrieve_by_id(session=session, case_id=case_id)

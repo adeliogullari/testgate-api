@@ -4,7 +4,7 @@ from .abstract import MessageDigestStrategy
 
 
 class Blake2bMessageDigestStrategy(MessageDigestStrategy):
-    def __init__(self):
+    def __init__(self) -> None:
         self.blake2b = Blake2b()
 
     def encode(

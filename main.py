@@ -11,19 +11,18 @@ from src.testgate.repository.views import router as repository_router
 from src.testgate.execution.views import router as execution_router
 from src.testgate.suite.views import router as suite_router
 from src.testgate.suite.views import router as case_router
-from src.testgate.database.database import run_db_migrations, create_db_and_tables
+from src.testgate.database.service import run_db_migrations, create_db_and_tables
 
 
 tags_metadata = [
     {"name": "auth", "description": "Operations with auth"},
-    {"name": "users", "description": "Operations with users."},
-    {"name": "roles", "description": "Operations with roles."},
-    {"name": "teams", "description": "Operations with teams."},
-    {"name": "repository", "description": "Operations with repository"},
-    {"name": "projects", "description": "Operations with projects."},
-    {"name": "runs", "description": "Operations with runs"},
-    {"name": "results", "description": "Operations with results"},
+    {"name": "cases", "description": "Operations with cases"},
+    {"name": "executions", "description": "Operations with executions"},
     {"name": "permissions", "description": "Operations with permissions"},
+    {"name": "repositories", "description": "Operations with repositories"},
+    {"name": "roles", "description": "Operations with roles"},
+    {"name": "suites", "description": "Operations with suites"},
+    {"name": "users", "description": "Operations with users"},
 ]
 
 app = FastAPI()

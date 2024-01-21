@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Any
 from sqlmodel import select, Session
 from src.testgate.permission.models import Permission
 from .schemas import (
@@ -26,7 +26,7 @@ def create(
 def retrieve_by_id(*, session: Session, id: int) -> Optional[Permission]:
     """Return a permission object based on the given id."""
 
-    statement = select(Permission).where(Permission.id == id)
+    statement: Any = select(Permission).where(Permission.id == id)
 
     retrieved_permission = session.exec(statement).one_or_none()
 
@@ -36,7 +36,7 @@ def retrieve_by_id(*, session: Session, id: int) -> Optional[Permission]:
 def retrieve_by_name(*, session: Session, name: str) -> Optional[Permission]:
     """Return a permission object based on the given name."""
 
-    statement = select(Permission).where(Permission.name == name)
+    statement: Any = select(Permission).where(Permission.name == name)
 
     retrieved_permission = session.exec(statement).one_or_none()
 
@@ -48,9 +48,9 @@ def retrieve_by_query_parameters(
 ) -> Optional[List[Permission]]:
     """Return list of permission objects based on the given query parameters."""
 
-    statement = select(Permission)
+    statement: Any = select(Permission)
 
-    for attr, value in query_parameters.dict(exclude={"offset", "limit"}).items():
+    for attr, value in query_parameters.model_dump(exclude={"offset", "limit"}).items():
         if value:
             statement = statement.filter(getattr(Permission, attr).like(value))
 

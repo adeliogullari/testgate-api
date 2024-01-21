@@ -9,6 +9,7 @@ from .schemas import (
     UpdateSuiteResponseModel,
     DeleteSuiteResponseModel,
 )
+from src.testgate.suite.models import Suite
 from src.testgate.database.service import get_session
 
 router = APIRouter(tags=["suites"])
@@ -27,7 +28,9 @@ SuiteAlreadyExistsException = HTTPException(
     response_model=RetrieveSuiteResponseModel,
     status_code=200,
 )
-def retrieve_suite_by_id(*, session: Session = Depends(get_session), id: int):
+def retrieve_suite_by_id(
+    *, session: Session = Depends(get_session), id: int
+) -> Suite | None:
     """Retrieve suite by id."""
 
     retrieved_suite = retrieve_by_id(session=session, id=id)
@@ -45,7 +48,7 @@ def retrieve_suite_by_id(*, session: Session = Depends(get_session), id: int):
 )
 def create_suite(
     *, session: Session = Depends(get_session), suite: CreateSuiteRequestModel
-):
+) -> Suite | None:
     """Creates suite."""
 
     retrieved_suite = retrieve_by_name(session=session, name=suite.name)
@@ -65,7 +68,7 @@ def create_suite(
 )
 def update_suite(
     *, session: Session = Depends(get_session), id: int, suite: UpdateSuiteRequestModel
-):
+) -> Suite | None:
     """Updates suite."""
 
     retrieved_suite = retrieve_by_id(session=session, id=id)
@@ -85,7 +88,7 @@ def update_suite(
     response_model=DeleteSuiteResponseModel,
     status_code=200,
 )
-def delete_suite(*, session: Session = Depends(get_session), id: int):
+def delete_suite(*, session: Session = Depends(get_session), id: int) -> Suite | None:
     """Deletes suite."""
 
     retrieved_suite = retrieve_by_id(session=session, id=id)

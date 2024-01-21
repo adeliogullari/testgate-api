@@ -6,7 +6,7 @@ class BearerToken(AuthenticationToken):
     def encode(self, payload: dict[str, Any], key: str, headers: dict[str, Any]) -> str:
         return super().encode(payload=payload, key=key, headers=headers)
 
-    def decode(self, token: str) -> tuple:
+    def decode(self, token: str) -> Any:
         return super().decode(token=token)
 
     def verify(
@@ -26,7 +26,7 @@ class BearerToken(AuthenticationToken):
         iss: str | None = None,
         sub: str | None = None,
         aud: str | None = None,
-    ) -> tuple:
+    ) -> tuple[bool, Any, Any, Any]:
         return super().verify_and_decode(
             key=key, token=token, iss=iss, sub=sub, aud=aud
         )
