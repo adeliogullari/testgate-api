@@ -1,65 +1,41 @@
-# from sqlmodel import Session
-# from fastapi import APIRouter, Depends
-#
-# import src.testgate.user.service as auth_service
-# from src.testgate.user.models import User
-# from src.testgate.user.views import retrieve_current_user
-# from config import get_settings, Settings
-#
-# from src.testgate.email.service import EmailService, get_email_service
-# from src.testgate.database.service import get_session
+import asyncio
 
-# email_router = APIRouter(tags=["emails"])
+from sqlmodel import Session
+from fastapi import APIRouter, Depends
+from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
+from src.testgate.email.schema import SendEmailModel
+
+from config import get_settings, Settings
+
+from src.testgate.email.service import EmailService, get_email_service, email_producer, email_consumer
+from src.testgate.database.service import get_session
+
+router = APIRouter(tags=["email"])
 
 
-# @email_router.post(
-#     path="/api/v1/emails/verification", response_model=None, status_code=200
-# )
-# def send_verification_email(
-#     *,
-#     session: Session = Depends(get_session),
-#     settings: Settings = Depends(get_settings),
-#     email_service: EmailService = Depends(get_email_service),
-# ):
-#     email_service.email_subject = "Email Verification"
-#     email_service.email_to = "user.email"
-#     email_service.add_plain_text_message(
-#         "Hi!\nHow are you?\nHere is the link you wanted:\nhttp://www.python.org"
-#     )
-#     email_service.add_html_message(
-#         """\
-#             <html>
-#                 <head></head>
-#                 <body>
-#                     <p>
-#                         Hi!
-#                         <br>How are you?<br>
-#                         Here is the <a href="http://www.python.org">link</a> you wanted.
-#                     </p>
-#                 </body>
-#             </html>
-#         """
-#     )
-#     email_service.send_email()
+@router.post(path="/api/v1/email", response_model=None, status_code=200)
+def send_email(
+    *,
+    session: Session = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+    email: SendEmailModel,
+    email_service: EmailService = Depends(get_email_service),
+):
+    email_service.email_subject = email.subject
+    email_service.email_from = settings.testgate_smtp_email_address
+    email_service.email_password = settings.testgate_smtp_email_app_password
+    email_service.email_to = email.to_address
+    email_service.add_plain_text_message(email.plain_text_message)
+    email_service.add_html_message(email.html_message)
+    email_service.send_email()
 
-# email_service = EmailService()
-# email_service.email_subject = "Email Verification"
-# email_service.email_from = SMTP_EMAIL_ADDRESS
-# email_service.email_to = user.email
-# email_service.email_password = SMTP_EMAIL_APP_PASSWORD
-#
-# email_service.add_plain_text_message("Hi!\nHow are you?\nHere is the link you wanted:\nhttp://www.python.org")
-# email_service.add_html_message(
-#     """\
-#         <html>
-#             <head></head>
-#             <body>
-#                 <p>
-#                     Hi!
-#                     <br>How are you?<br>
-#                     Here is the <a href="http://www.python.org">link</a> you wanted.
-#                 </p>
-#             </body>
-#         </html>
-#     """)
-# email_service.send_email()
+
+@router.post(path="/api/v1/email_kafka", response_model=None, status_code=200)
+async def send_email_kafka(
+    *,
+    session: Session = Depends(get_session),
+    settings: Settings = Depends(get_settings),
+    email: SendEmailModel,
+    email_service: EmailService = Depends(get_email_service),
+):
+    await email_producer()

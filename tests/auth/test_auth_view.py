@@ -7,7 +7,9 @@ password_hash_library = PasswordHashLibrary(ScryptPasswordHashStrategy())
 
 
 @pytest.mark.parametrize("user__verified", [True])
-@pytest.mark.parametrize("user__password", [password_hash_library.encode("password_2024")])
+@pytest.mark.parametrize(
+    "user__password", [password_hash_library.encode("password_2024")]
+)
 def test_login(client, user_factory, user):
     response = client.post(
         url="/api/v1/auth/login",
@@ -19,7 +21,9 @@ def test_login(client, user_factory, user):
 
 
 @pytest.mark.parametrize("user__verified", [True])
-@pytest.mark.parametrize("user__password", [password_hash_library.encode("password_2024")])
+@pytest.mark.parametrize(
+    "user__password", [password_hash_library.encode("password_2024")]
+)
 def test_login_with_invalid_email(client, user_factory, user):
     response = client.post(
         url="/api/v1/auth/login",
@@ -30,8 +34,10 @@ def test_login_with_invalid_email(client, user_factory, user):
     assert response.status_code == 404
 
 
-@pytest.mark.parametrize("user__password", [password_hash_library.encode("password_2024")])
-def test_login_with_unverified(client, user_factory, user):
+@pytest.mark.parametrize(
+    "user__password", [password_hash_library.encode("password_2024")]
+)
+def test_login_with_invalid_verification(client, user_factory, user):
     response = client.post(
         url="/api/v1/auth/login",
         json=user_factory.stub(email=user.email, password="password_2024").__dict__,
@@ -41,7 +47,9 @@ def test_login_with_unverified(client, user_factory, user):
 
 
 @pytest.mark.parametrize("user__verified", [True])
-@pytest.mark.parametrize("user__password", [password_hash_library.encode("password_2024")])
+@pytest.mark.parametrize(
+    "user__password", [password_hash_library.encode("password_2024")]
+)
 def test_login_with_invalid_password(client, user_factory, user):
     response = client.post(
         url="/api/v1/auth/login",

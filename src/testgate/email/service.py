@@ -3,17 +3,19 @@ from config import Settings
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
+
 settings = Settings()
 
 
 class EmailService:
     def __init__(self) -> None:
-        self._email_subject: str | None = None
-        self._email_from: str | None = None
-        self._email_to: str | None = None
+        self._email_subject: str = ""
+        self._email_from: str = ""
+        self._email_to: str = ""
+        self._email_password: str = ""
         self._email_messages: MIMEMultipart = MIMEMultipart("alternative")
-        self._email_password: str | None = None
-        self._smtp_server: SMTP | None = None
+        self._smtp_server: SMTP = SMTP("smtp.gmail.com", 587)
 
     @property
     def email_subject(self) -> str | None:
@@ -24,7 +26,7 @@ class EmailService:
         self._email_subject = value
 
     @property
-    def email_from(self) -> str | None:
+    def email_from(self) -> str:
         return self._email_from
 
     @email_from.setter
@@ -55,6 +57,14 @@ class EmailService:
     def email_password(self, value: str) -> None:
         self._email_password = value
 
+    @property
+    def smtp_server(self) -> SMTP | None:
+        return self._smtp_server
+
+    @smtp_server.setter
+    def smtp_server(self, value: SMTP) -> None:
+        self._smtp_server = value
+
     def add_plain_text_message(self, plain_text: str) -> None:
         message = MIMEText(plain_text, "plain")
         self._email_messages.attach(message)
@@ -64,7 +74,6 @@ class EmailService:
         self._email_messages.attach(message)
 
     def start_smtp_server(self) -> None:
-        self._smtp_server = SMTP("smtp.gmail.com", 587)
         self._smtp_server.ehlo()
         self._smtp_server.starttls()
         self._smtp_server.login(self._email_from, self._email_password)
@@ -76,7 +85,7 @@ class EmailService:
         self._smtp_server.sendmail(
             self.email_from, self._email_to, self._email_messages.as_string()
         )
-        self._smtp_server.quit()
+        # self._smtp_server.quit()
 
 
 def get_email_service() -> EmailService:
@@ -85,3 +94,33 @@ def get_email_service() -> EmailService:
     email_service.email_password = settings.testgate_smtp_email_app_password
     email_service.start_smtp_server()
     return email_service
+
+
+async def email_producer():
+    producer = AIOKafkaProducer(
+        bootstrap_servers='localhost:9092')
+    # Get cluster layout and initial topic/partition leadership information
+    await producer.start()
+    try:
+        # Produce message
+        await producer.send_and_wait("email", b"Super message")
+    finally:
+        # Wait for all pending messages to be delivered or expire.
+        await producer.stop()
+
+
+async def email_consumer():
+    consumer = AIOKafkaConsumer(
+        'email',
+        bootstrap_servers='localhost:9092',
+        group_id="email")
+    # Get cluster layout and join group `my-group`
+    await consumer.start()
+    try:
+        # Consume messages
+        async for msg in consumer:
+            print("consumed: ", msg.topic, msg.partition, msg.offset,
+                  msg.key, msg.value, msg.timestamp)
+    finally:
+        # Will leave consumer group; perform autocommit if enabled.
+        await consumer.stop()

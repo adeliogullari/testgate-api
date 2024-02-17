@@ -28,6 +28,7 @@ def login(
     retrieved_user = user_service.retrieve_by_email(
         session=session, user_email=login_credentials.email
     )
+
     if not retrieved_user:
         raise UserNotFoundByEmailException
 

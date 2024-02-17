@@ -25,7 +25,7 @@ class UserFactory(SQLAlchemyModelFactory):
     lastname = Faker("last_name")
     username = Faker("user_name")
     email = Faker("email")
-    password = b""  # Faker("password")
+    password = Faker("binary")
     verified = False
     image = Faker("name")
     role = factory.SubFactory(RoleFactory)
@@ -34,11 +34,6 @@ class UserFactory(SQLAlchemyModelFactory):
     def role_generation(self, create, extracted, **kwargs):
         if not create:
             self.role = self.role.__dict__["name"]
-
-    @factory.post_generation
-    def password_generation(self, create, extracted, **kwargs):
-        if create:
-            self.password = password_hash_library.encode(str(self.password))
 
 
 @pytest.fixture

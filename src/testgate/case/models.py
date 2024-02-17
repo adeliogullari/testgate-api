@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional, TYPE_CHECKING
 from sqlmodel import SQLModel, Field, Relationship
 
@@ -13,6 +14,11 @@ class CaseResult(SQLModel, table=True):
     passed: int = Field(default=0)
     failed: int = Field(default=0)
     skipped: int = Field(default=0)
+    status: str = Field(default="")
+    message: str = Field(default="")
+    start_time: datetime = Field(default_factory=datetime.utcnow)
+    end_time: datetime = Field(default_factory=datetime.utcnow)
+    elapsed_time: int = Field(default=0)
     case_id: int | None = Field(default=None, foreign_key="case.id")
     case: "Case" = Relationship(back_populates="result")
 

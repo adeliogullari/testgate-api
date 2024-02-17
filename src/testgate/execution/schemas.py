@@ -1,4 +1,3 @@
-from typing import Optional
 from sqlmodel import SQLModel
 from src.testgate.execution.models import ExecutionResult
 

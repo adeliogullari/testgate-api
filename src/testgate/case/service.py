@@ -1,6 +1,6 @@
-from typing import Optional, List, Any
+from typing import List, Any
 from sqlmodel import select, Session
-from .models import Case, CaseResult
+from .models import Case
 from .schemas import CreateCaseRequestModel, CaseQueryParameters, UpdateCaseRequestModel
 
 

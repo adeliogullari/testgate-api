@@ -1,7 +1,5 @@
-import pytest
 from factory.faker import Faker
 from src.testgate.permission.models import Permission
-from pytest_factoryboy import register
 from factory.alchemy import SQLAlchemyModelFactory
 
 

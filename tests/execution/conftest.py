@@ -1,8 +1,6 @@
-import pytest
 import factory
 from factory.faker import Faker
 from src.testgate.execution.models import Execution, ExecutionResult
-from pytest_factoryboy import register
 from factory.alchemy import SQLAlchemyModelFactory
 from src.testgate.auth.crypto.password.library import PasswordHashLibrary
 from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy

@@ -1,6 +1,10 @@
+import asyncio
+
 import uvicorn
 from fastapi import FastAPI
 from pathlib import Path
+
+from src.testgate.email.service import email_consumer
 
 from fastapi.middleware.cors import CORSMiddleware
 from src.testgate.auth.views import router as auth_router
@@ -11,12 +15,14 @@ from src.testgate.repository.views import router as repository_router
 from src.testgate.execution.views import router as execution_router
 from src.testgate.suite.views import router as suite_router
 from src.testgate.suite.views import router as case_router
+from src.testgate.email.views import router as email_router
 from src.testgate.database.service import run_db_migrations, create_db_and_tables
 
 
 tags_metadata = [
     {"name": "auth", "description": "Operations with auth"},
     {"name": "cases", "description": "Operations with cases"},
+    {"name": "email", "description": "Operations with email"},
     {"name": "executions", "description": "Operations with executions"},
     {"name": "permissions", "description": "Operations with permissions"},
     {"name": "repositories", "description": "Operations with repositories"},
@@ -41,6 +47,9 @@ app.include_router(repository_router)
 app.include_router(execution_router)
 app.include_router(suite_router)
 app.include_router(case_router)
+app.include_router(email_router)
+
+# asyncio.run(email_consumer())
 
 
 @app.on_event("startup")

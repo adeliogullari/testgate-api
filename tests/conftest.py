@@ -104,7 +104,7 @@ def client(app: FastAPI, db_session: SessionTesting):
             testgate_jwt_access_token_key="SJ6nWJtM737AZWevVdDEr4Fh0GmoyR8k",
             testgate_jwt_refresh_token_exp_days="90",
             testgate_jwt_refresh_token_key="SJ6nWJtM737AZWevVdDEr4Fh0GmoyR8k",
-            testgate_smtp_email_verification=True,
+            testgate_smtp_email_verification=False,
         )
 
     app.dependency_overrides[get_session] = _get_session

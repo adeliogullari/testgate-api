@@ -6,7 +6,6 @@ from src.testgate.user.schemas import (
     CreateUserRequestModel,
     UpdateUserRequestModel,
 )
-from src.testgate.repository.models import Repository
 from src.testgate.role.models import Role
 
 

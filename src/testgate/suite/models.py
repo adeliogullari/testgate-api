@@ -1,4 +1,5 @@
-from typing import Optional, TYPE_CHECKING, List
+from datetime import datetime
+from typing import TYPE_CHECKING
 from sqlmodel import SQLModel, Field, Relationship
 from src.testgate.case.models import Case
 
@@ -14,6 +15,11 @@ class SuiteResult(SQLModel, table=True):
     passed: int = Field(default=0)
     failed: int = Field(default=0)
     skipped: int = Field(default=0)
+    status: str = Field(default="")
+    message: str = Field(default="")
+    start_time: datetime = Field(default_factory=datetime.utcnow)
+    end_time: datetime = Field(default_factory=datetime.utcnow)
+    elapsed_time: int = Field(default=0)
     suite_id: int | None = Field(default=None, foreign_key="suite.id")
     suite: "Suite" = Relationship(back_populates="result")
 

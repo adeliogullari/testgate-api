@@ -15,11 +15,11 @@ from .schemas import (
 import src.testgate.execution.service as execution_service
 from src.testgate.database.service import get_session
 
-router = APIRouter(tags=["execution"])
+router = APIRouter(tags=["executions"])
 
 
 @router.get(
-    path="/api/v1/execution/{id}",
+    path="/api/v1/executions/{id}",
     response_model=RetrieveExecutionResponse,
     status_code=200,
 )
@@ -80,7 +80,7 @@ def create_execution(
 
 
 @router.put(
-    path="/api/v1/execution/{id}",
+    path="/api/v1/executions/{id}",
     response_model=UpdateExecutionResponse,
     status_code=200,
 )
@@ -105,7 +105,7 @@ def update_execution(
 
 
 @router.delete(
-    path="/api/v1/execution/{id}",
+    path="/api/v1/executions/{id}",
     response_model=DeleteExecutionResponse,
     status_code=200,
 )

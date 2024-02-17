@@ -1,6 +1,6 @@
 from typing import Optional, List, Any
 from sqlmodel import select, Session
-from src.testgate.execution.models import Execution, ExecutionResult
+from src.testgate.execution.models import Execution
 from src.testgate.execution.schemas import (
     CreateExecutionRequest,
     ExecutionQueryParameters,

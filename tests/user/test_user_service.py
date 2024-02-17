@@ -1,5 +1,3 @@
-import pytest
-
 from src.testgate.auth.crypto.password.library import PasswordHashLibrary
 from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy
 from src.testgate.user.models import User
@@ -62,7 +60,9 @@ def test_retrieve_by_query_parameters(db_session, user: User):
 
 
 def test_create(db_session, user_factory):
-    user = CreateUserRequestModel(**user_factory.stub(password="password_2024").__dict__)
+    user = CreateUserRequestModel(
+        **user_factory.stub(password="password_2024").__dict__
+    )
 
     created_user = create(session=db_session, user=user)
 
@@ -70,7 +70,9 @@ def test_create(db_session, user_factory):
 
 
 def test_update(db_session, user_factory, user: User):
-    update_user = UpdateUserRequestModel(**user_factory.stub(password="password_2024").__dict__)
+    update_user = UpdateUserRequestModel(
+        **user_factory.stub(password="password_2024").__dict__
+    )
 
     updated_user = update(session=db_session, retrieved_user=user, user=update_user)
 
@@ -78,7 +80,9 @@ def test_update(db_session, user_factory, user: User):
 
 
 def test_update_password(db_session, user_factory, user: User):
-    retrieved_user = user_factory.stub(password=password_pash_library.encode("password_2024"))
+    retrieved_user = user_factory.stub(
+        password=password_pash_library.encode("password_2024")
+    )
 
     updated_user = update_password(
         session=db_session, retrieved_user=user, password=retrieved_user.password

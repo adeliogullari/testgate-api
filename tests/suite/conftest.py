@@ -1,7 +1,5 @@
-import pytest
 import factory
 from src.testgate.suite.models import Suite, SuiteResult
-from pytest_factoryboy import register
 from factory.alchemy import SQLAlchemyModelFactory
 
 

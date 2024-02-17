@@ -42,7 +42,9 @@ def test_retrieve_user_by_invalid_id(client, headers):
 
 def test_create_user(client, user_factory, headers):
     response = client.post(
-        url="/api/v1/users", json=user_factory.stub(password="password_2024").__dict__, headers=headers
+        url="/api/v1/users",
+        json=user_factory.stub(password="password_2024").__dict__,
+        headers=headers,
     )
 
     assert response.status_code == 201
@@ -51,7 +53,9 @@ def test_create_user(client, user_factory, headers):
 def test_create_user_with_existing_username(client, user_factory, user, headers):
     response = client.post(
         url="/api/v1/users",
-        json=user_factory.stub(username=user.username, password="password_2024").__dict__,
+        json=user_factory.stub(
+            username=user.username, password="password_2024"
+        ).__dict__,
         headers=headers,
     )
 
@@ -70,7 +74,9 @@ def test_create_user_with_existing_email(client, user_factory, user, headers):
 
 def test_update_current_user(client, user_factory, user, headers):
     response = client.put(
-        url="/api/v1/me", json=user_factory.stub(password="password_2024").__dict__, headers=headers
+        url="/api/v1/me",
+        json=user_factory.stub(password="password_2024").__dict__,
+        headers=headers,
     )
 
     assert response.status_code == 200
@@ -79,7 +85,9 @@ def test_update_current_user(client, user_factory, user, headers):
 
 def test_update_current_user_with_invalid_token(client, user_factory):
     response = client.put(
-        url="/api/v1/me", json=user_factory.stub(password="password_2024").__dict__, headers=invalid_headers
+        url="/api/v1/me",
+        json=user_factory.stub(password="password_2024").__dict__,
+        headers=invalid_headers,
     )
 
     assert response.status_code == 403
@@ -119,7 +127,9 @@ def test_verify_current_user_with_invalid_token(client):
     assert response.status_code == 403
 
 
-@pytest.mark.parametrize("user__password", [password_pash_library.encode("password_2024")])
+@pytest.mark.parametrize(
+    "user__password", [password_pash_library.encode("password_2024")]
+)
 def test_update_current_user_password(client, user, headers):
     response = client.put(
         url="/api/v1/me/change-password",

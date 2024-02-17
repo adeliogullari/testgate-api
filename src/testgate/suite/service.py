@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 from sqlmodel import select, Session
 from .models import Suite, SuiteResult
 from .schemas import CreateSuiteRequestModel, UpdateSuiteRequestModel

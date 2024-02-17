@@ -134,8 +134,8 @@ class ChangeUserPasswordRequestModel(SQLModel):
     password: str
     password_confirmation: str
 
-    @model_validator(mode='after')
-    def check_passwords_match(self) -> 'ChangeUserPasswordRequestModel':
+    @model_validator(mode="after")
+    def check_passwords_match(self) -> "ChangeUserPasswordRequestModel":
         if self.password != self.password_confirmation:
             raise InvalidPasswordConfirmationException
         return self

@@ -1,4 +1,4 @@
-from typing import Optional, TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 from sqlmodel import SQLModel, Field, Relationship
 from src.testgate.suite.models import Suite
 
@@ -14,6 +14,7 @@ class ExecutionResult(SQLModel, table=True):
     passed: int = Field(default=0)
     failed: int = Field(default=0)
     skipped: int = Field(default=0)
+    total_time: int = Field(default=0)
     execution_id: int | None = Field(default=None, foreign_key="execution.id")
     execution: "Execution" = Relationship(back_populates="result")
 

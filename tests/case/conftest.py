@@ -1,6 +1,6 @@
 import factory
-from src.testgate.case.models import Case, CaseResult
 from factory.alchemy import SQLAlchemyModelFactory
+from src.testgate.case.models import Case, CaseResult
 
 
 class CaseResultFactory(SQLAlchemyModelFactory):
