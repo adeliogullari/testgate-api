@@ -7,8 +7,9 @@ from src.testgate.email.schema import SendEmailModel
 
 from config import get_settings, Settings
 
-from src.testgate.email.service import EmailService, get_email_service, email_producer, email_consumer
+from src.testgate.email.service import EmailService, get_email_service, email_producer, email_consumer, aio_kafka_email_producer
 from src.testgate.database.service import get_session
+from src.testgate.kafka.service import aio_kafka_producer, aio_kafka_consumer
 
 router = APIRouter(tags=["email"])
 
@@ -38,4 +39,8 @@ async def send_email_kafka(
     email: SendEmailModel,
     email_service: EmailService = Depends(get_email_service),
 ):
-    await email_producer()
+    response = await aio_kafka_email_producer(value=email.model_dump())
+    return response
+    # await email_producer()
+    # response = await aio_kafka_producer(topic="email", value=email)
+    # return response

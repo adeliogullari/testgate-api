@@ -7,3 +7,10 @@ class SendEmailModel(SQLModel):
     to_address: str
     plain_text_message: str
     html_message: str
+
+
+class SendEmailProducerModel(SQLModel):
+    subject: str
+    to_address: str
+    plain_text_message: str
+    html_message: str

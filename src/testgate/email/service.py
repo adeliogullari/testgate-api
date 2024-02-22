@@ -1,9 +1,12 @@
+import asyncio
+from typing import Any
 from smtplib import SMTP
 from config import Settings
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
+from src.testgate.kafka.service import aio_kafka_producer, aio_kafka_consumer
 
 settings = Settings()
 
@@ -96,9 +99,17 @@ def get_email_service() -> EmailService:
     return email_service
 
 
+def send_email_service(email_service: EmailService, email_subject: str, plain_text_message: str, html_message: str) -> None:
+    email_service.email_subject = email_subject
+    # email_service.email_to = email.to_address
+    email_service.add_plain_text_message(plain_text_message)
+    email_service.add_html_message(html_message)
+    email_service.send_email()
+
+
 async def email_producer():
     producer = AIOKafkaProducer(
-        bootstrap_servers='localhost:9092')
+        bootstrap_servers='localhost:9094')
     # Get cluster layout and initial topic/partition leadership information
     await producer.start()
     try:
@@ -112,7 +123,7 @@ async def email_producer():
 async def email_consumer():
     consumer = AIOKafkaConsumer(
         'email',
-        bootstrap_servers='localhost:9092',
+        bootstrap_servers='localhost:9094',
         group_id="email")
     # Get cluster layout and join group `my-group`
     await consumer.start()
@@ -123,4 +134,34 @@ async def email_consumer():
                   msg.key, msg.value, msg.timestamp)
     finally:
         # Will leave consumer group; perform autocommit if enabled.
+        await consumer.stop()
+
+
+async def aio_kafka_email_producer(value: Any) -> None:
+    producer = await aio_kafka_producer()
+    await producer.start()
+    try:
+        await producer.send_and_wait("email", value=value)
+    finally:
+        await producer.stop()
+
+
+async def aio_kafka_email_consumer():
+    consumer = await aio_kafka_consumer()
+    consumer.subscribe(topics=['email'])
+
+    await consumer.start()
+    try:
+        async for msg in consumer:
+            print("consumed: ", msg.topic, msg.partition, msg.offset, msg.key, type(msg.value), msg.timestamp)
+            email_service = EmailService()
+            email_service.email_from = settings.testgate_smtp_email_address
+            email_service.email_password = settings.testgate_smtp_email_password
+            email_service.start_smtp_server()
+            email_service.email_subject = msg.value['subject']
+            email_service.email_to = msg.value['to_address']
+            email_service.add_plain_text_message(msg.value['plain_text_message'])
+            email_service.add_html_message(msg.value['html_message'])
+            email_service.send_email()
+    finally:
         await consumer.stop()

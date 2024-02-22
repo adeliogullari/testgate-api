@@ -1,12 +1,11 @@
 import asyncio
-
 import uvicorn
 from fastapi import FastAPI
 from pathlib import Path
 
-from src.testgate.email.service import email_consumer
-
 from fastapi.middleware.cors import CORSMiddleware
+
+from config import Settings
 from src.testgate.auth.views import router as auth_router
 from src.testgate.user.views import router as user_router
 from src.testgate.role.views import router as role_router
@@ -18,6 +17,9 @@ from src.testgate.suite.views import router as case_router
 from src.testgate.email.views import router as email_router
 from src.testgate.database.service import run_db_migrations, create_db_and_tables
 
+from src.testgate.email.service import email_consumer, aio_kafka_email_consumer
+
+settings = Settings()
 
 tags_metadata = [
     {"name": "auth", "description": "Operations with auth"},
@@ -49,13 +51,14 @@ app.include_router(suite_router)
 app.include_router(case_router)
 app.include_router(email_router)
 
-# asyncio.run(email_consumer())
-
 
 @app.on_event("startup")
 def on_startup():
+    """Startup event for FastAPI application."""
     run_db_migrations()
     create_db_and_tables()
+    if settings.testgate_kafka_enabled:
+        asyncio.create_task(aio_kafka_email_consumer())
 
 
 @app.on_event("shutdown")
@@ -76,9 +79,9 @@ app.add_middleware(
 if __name__ == "__main__":
     uvicorn.run(
         f"{Path(__file__).stem}:app",
-        host="127.0.0.1",
-        port=5000,
-        log_level="info",
-        reload=True,
-        workers=2,
+        host=settings.testgate_uvicorn_host,
+        port=settings.testgate_uvicorn_port,
+        log_level=settings.testgate_uvicorn_log_level,
+        reload=settings.testgate_uvicorn_reload,
+        workers=settings.testgate_uvicorn_workers,
     )
