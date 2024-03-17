@@ -2,12 +2,12 @@ version: '3'
 
 services:
   postgres:
-    container_name: testgate_postgres
+    container_name: postgres
     image: postgres:latest
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -D $${POSTGRES_DB} -U $${POSTGRES_USER}" ]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD", "pg_isready", "-q", "-d", "testgate_postgres", "-U", "admin"]
+      interval: 5s
+      timeout: 10s
       retries: 5
     environment:
       POSTGRES_DB: testgate_postgres
@@ -17,7 +17,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
 
   pgadmin:
     container_name: pgadmin4
@@ -30,25 +30,44 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - pgadmin-data:/var/lib/pgadmin
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
 
-#  zookeeper:
-#    image: docker.io/bitnami/zookeeper:3.9
-#    ports:
-#      - "2181:2181"
-#    volumes:
-#      - "zookeeper-data:/bitnami"
+  redis:
+    container_name: redis
+    image: redis:latest
+    restart: always
+    environment:
+      - REDIS_PASSWORD=secret
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+  redisinsight:
+    container_name: redisinsight
+    image: redis/redisinsight:latest
+    restart: always
 #    environment:
-#      - ALLOW_ANONYMOUS_LOGIN=yes
+#      - REDISINSIGHT_REDIS_URI=redis://secret@redis:6379
+    ports:
+      - '5540:5540'
+    volumes:
+      - redisinsight_data:/data
+    depends_on:
+      - redis
 
   kafka:
-    image: docker.io/bitnami/kafka:3.4
+    container_name: kafka
+    image: docker.io/bitnami/kafka:latest
+    restart: always
     ports:
       - "9094:9094"
     volumes:
-      - "kafka-data:/bitnami"
+      - kafka_data:/bitnami
     environment:
-#    - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
     - KAFKA_CFG_NODE_ID=0
     - KAFKA_CFG_PROCESS_ROLES=controller,broker
     - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
@@ -58,11 +77,12 @@ services:
     - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
     - KAFKA_CFG_KRAFT_MODE=true
     - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
-#    depends_on:
-#      - zookeeper
+    - KAFKA_CFG_LOG_RETENTION_BYTES=24
 
   kafka-ui:
+    container_name: kafka-ui
     image: provectuslabs/kafka-ui:latest
+    restart: always
     ports:
       - "8081:8080"
     environment:
@@ -72,7 +92,9 @@ services:
       - kafka
 
 volumes:
-  postgres-data:
-  pgadmin-data:
-  zookeeper-data:
-  kafka-data:
+  postgres_data:
+  pgadmin_data:
+  redis_data:
+  redisinsight_data:
+  zookeeper_data:
+  kafka_data:

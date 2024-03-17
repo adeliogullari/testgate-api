@@ -10,7 +10,7 @@ from .schemas import (
     DeleteSuiteResponseModel,
 )
 from src.testgate.suite.models import Suite
-from src.testgate.database.service import get_session
+from src.testgate.database.service import get_sqlmodel_session
 
 router = APIRouter(tags=["suites"])
 
@@ -28,12 +28,12 @@ SuiteAlreadyExistsException = HTTPException(
     response_model=RetrieveSuiteResponseModel,
     status_code=200,
 )
-def retrieve_suite_by_id(
-    *, session: Session = Depends(get_session), id: int
+async def retrieve_suite_by_id(
+    *, sqlmodel_session: Session = Depends(get_sqlmodel_session), id: int
 ) -> Suite | None:
     """Retrieve suite by id."""
 
-    retrieved_suite = retrieve_by_id(session=session, id=id)
+    retrieved_suite = await retrieve_by_id(sqlmodel_session=sqlmodel_session, id=id)
 
     if not retrieved_suite:
         raise SuiteNotFoundException
@@ -46,17 +46,21 @@ def retrieve_suite_by_id(
     response_model=CreateSuiteResponseModel,
     status_code=201,
 )
-def create_suite(
-    *, session: Session = Depends(get_session), suite: CreateSuiteRequestModel
+async def create_suite(
+    *,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    suite: CreateSuiteRequestModel,
 ) -> Suite | None:
     """Creates suite."""
 
-    retrieved_suite = retrieve_by_name(session=session, name=suite.name)
+    retrieved_suite = await retrieve_by_name(
+        sqlmodel_session=sqlmodel_session, name=suite.name
+    )
 
     if retrieved_suite:
         raise SuiteAlreadyExistsException
 
-    created_suite = create(session=session, suite=suite)
+    created_suite = await create(sqlmodel_session=sqlmodel_session, suite=suite)
 
     return created_suite
 
@@ -66,18 +70,21 @@ def create_suite(
     response_model=UpdateSuiteResponseModel,
     status_code=200,
 )
-def update_suite(
-    *, session: Session = Depends(get_session), id: int, suite: UpdateSuiteRequestModel
+async def update_suite(
+    *,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    id: int,
+    suite: UpdateSuiteRequestModel,
 ) -> Suite | None:
     """Updates suite."""
 
-    retrieved_suite = retrieve_by_id(session=session, id=id)
+    retrieved_suite = await retrieve_by_id(sqlmodel_session=sqlmodel_session, id=id)
 
     if not retrieved_suite:
         raise SuiteNotFoundException
 
-    updated_suite = update(
-        session=session, retrieved_suite=retrieved_suite, suite=suite
+    updated_suite = await update(
+        sqlmodel_session=sqlmodel_session, retrieved_suite=retrieved_suite, suite=suite
     )
 
     return updated_suite
@@ -88,14 +95,18 @@ def update_suite(
     response_model=DeleteSuiteResponseModel,
     status_code=200,
 )
-def delete_suite(*, session: Session = Depends(get_session), id: int) -> Suite | None:
+async def delete_suite(
+    *, sqlmodel_session: Session = Depends(get_sqlmodel_session), id: int
+) -> Suite | None:
     """Deletes suite."""
 
-    retrieved_suite = retrieve_by_id(session=session, id=id)
+    retrieved_suite = await retrieve_by_id(sqlmodel_session=sqlmodel_session, id=id)
 
     if not retrieved_suite:
         raise SuiteNotFoundException
 
-    deleted_suite = delete(session=session, retrieved_suite=retrieved_suite)
+    deleted_suite = await delete(
+        sqlmodel_session=sqlmodel_session, retrieved_suite=retrieved_suite
+    )
 
     return deleted_suite

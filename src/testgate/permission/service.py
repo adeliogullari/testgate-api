@@ -1,5 +1,7 @@
-from typing import Optional, List, Any
+import json
+from typing import Optional, Any, Sequence
 from sqlmodel import select, Session
+from redis.asyncio.client import Redis
 from src.testgate.permission.models import Permission
 from .schemas import (
     CreatePermissionRequest,
@@ -8,44 +10,55 @@ from .schemas import (
 )
 
 
-def create(
-    *, session: Session, permission: CreatePermissionRequest
-) -> Optional[Permission]:
+async def create(
+    *, sqlmodel_session: Session, permission: CreatePermissionRequest
+) -> Permission | None:
     """Creates a new permission object."""
 
     created_permission = Permission()
     created_permission.name = permission.name
 
-    session.add(created_permission)
-    session.commit()
-    session.refresh(created_permission)
+    sqlmodel_session.add(created_permission)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(created_permission)
 
     return created_permission
 
 
-def retrieve_by_id(*, session: Session, id: int) -> Optional[Permission]:
+async def retrieve_by_id(
+    *, sqlmodel_session: Session, redis_client: Redis, permission_id: int
+) -> Permission | None:
     """Return a permission object based on the given id."""
 
-    statement: Any = select(Permission).where(Permission.id == id)
+    if cached_execution := await redis_client.get(name=f"permission_{permission_id}"):
+        return Permission(**json.loads(cached_execution))
 
-    retrieved_permission = session.exec(statement).one_or_none()
+    if retrieved_permission := sqlmodel_session.exec(
+        select(Permission).where(Permission.id == permission_id)
+    ).one_or_none():
+        await redis_client.set(
+            name=f"permission_{permission_id}",
+            value=retrieved_permission.model_dump_json(),
+        )
 
     return retrieved_permission
 
 
-def retrieve_by_name(*, session: Session, name: str) -> Optional[Permission]:
+async def retrieve_by_name(
+    *, sqlmodel_session: Session, permission_name: str
+) -> Permission | None:
     """Return a permission object based on the given name."""
 
-    statement: Any = select(Permission).where(Permission.name == name)
+    statement: Any = select(Permission).where(Permission.name == permission_name)
 
-    retrieved_permission = session.exec(statement).one_or_none()
+    retrieved_permission = sqlmodel_session.exec(statement).one_or_none()
 
     return retrieved_permission
 
 
-def retrieve_by_query_parameters(
-    *, session: Session, query_parameters: PermissionQueryParameters
-) -> Optional[List[Permission]]:
+async def retrieve_by_query_parameters(
+    *, sqlmodel_session: Session, query_parameters: PermissionQueryParameters
+) -> Sequence[Permission] | None:
     """Return list of permission objects based on the given query parameters."""
 
     statement: Any = select(Permission)
@@ -54,14 +67,14 @@ def retrieve_by_query_parameters(
         if value:
             statement = statement.filter(getattr(Permission, attr).like(value))
 
-    retrieved_permissions = session.exec(statement).all()
+    retrieved_permissions = sqlmodel_session.exec(statement).all()
 
     return retrieved_permissions
 
 
-def update(
+async def update(
     *,
-    session: Session,
+    sqlmodel_session: Session,
     retrieved_permission: Permission,
     permission: UpdatePermissionRequest,
 ) -> Optional[Permission]:
@@ -70,19 +83,19 @@ def update(
     retrieved_permission.name = permission.name
     updated_permission = retrieved_permission
 
-    session.add(updated_permission)
-    session.commit()
-    session.refresh(updated_permission)
+    sqlmodel_session.add(updated_permission)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(updated_permission)
 
     return updated_permission
 
 
-def delete(
-    *, session: Session, retrieved_permission: Permission
+async def delete(
+    *, sqlmodel_session: Session, retrieved_permission: Permission
 ) -> Optional[Permission]:
     """Deletes an existing permission object."""
 
-    session.delete(retrieved_permission)
-    session.commit()
+    sqlmodel_session.delete(retrieved_permission)
+    sqlmodel_session.commit()
 
     return retrieved_permission

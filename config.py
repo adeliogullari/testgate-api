@@ -20,11 +20,18 @@ class Settings(BaseSettings):
     testgate_postgresql_host: str
     testgate_postgresql_port: str
     testgate_postgresql_database: str
+    testgate_redis_enabled: bool
+    testgate_redis_host: str
+    testgate_redis_port: int
+    testgate_redis_username: str
+    testgate_redis_password: str
+    testgate_smtp_email_host: str
+    testgate_smtp_email_port: int
     testgate_smtp_email_verification: bool
     testgate_smtp_email_address: str
     testgate_smtp_email_username: str
     testgate_smtp_email_password: str
-    testgate_kafka_enabled: str
+    testgate_kafka_enabled: bool
     testgate_kafka_bootstrap_servers: str
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")

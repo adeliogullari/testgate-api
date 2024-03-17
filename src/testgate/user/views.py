@@ -1,4 +1,4 @@
-from typing import List
+from typing import Sequence, List
 from sqlmodel import Session
 from fastapi import APIRouter, Depends, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -33,8 +33,7 @@ from src.testgate.user.schemas import (
 )
 
 from config import Settings, get_settings
-from src.testgate.database.service import get_session
-# from src.testgate.email.service import EmailService, get_email_service
+from src.testgate.database.service import get_sqlmodel_session, get_redis_client
 
 from src.testgate.auth.oauth2.token.access import AccessToken
 from src.testgate.auth.oauth2.token.refresh import RefreshToken
@@ -52,9 +51,9 @@ router = APIRouter(tags=["users"])
     status_code=200,
     summary="Retrieves current user",
 )
-def retrieve_current_user(
+async def retrieve_current_user(
     *,
-    session: Session = Depends(get_session),
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
     settings: Settings = Depends(get_settings),
     http_authorization: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
 ) -> User:
@@ -67,8 +66,8 @@ def retrieve_current_user(
     if not verified:
         raise InvalidAccessTokenException
 
-    retrieved_user = user_service.retrieve_by_email(
-        session=session, user_email=payload["email"]
+    retrieved_user = await user_service.retrieve_by_email(
+        sqlmodel_session=sqlmodel_session, user_email=payload["email"]
     )
 
     if not retrieved_user:
@@ -83,12 +82,14 @@ def retrieve_current_user(
     status_code=200,
     summary="Retrieves user by id",
 )
-def retrieve_user_by_id(
-    *, user_id: int, session: Session = Depends(get_session)
+async def retrieve_user_by_id(
+    *, user_id: int, sqlmodel_session: Session = Depends(get_sqlmodel_session)
 ) -> User:
     """Retrieves user by id."""
 
-    retrieved_user = user_service.retrieve_by_id(session=session, user_id=user_id)
+    retrieved_user = await user_service.retrieve_by_id(
+        sqlmodel_session=sqlmodel_session, user_id=user_id
+    )
 
     if not retrieved_user:
         raise UserNotFoundByIdException
@@ -102,9 +103,9 @@ def retrieve_user_by_id(
     status_code=200,
     summary="Retrieves user by query parameters",
 )
-def retrieve_user_by_query_parameters(
+async def retrieve_user_by_query_parameters(
     *,
-    session: Session = Depends(get_session),
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
     firstname: str = Query(default=None),
@@ -113,7 +114,7 @@ def retrieve_user_by_query_parameters(
     email: str = Query(default=None),
     verified: bool = Query(default=False),
     role: str = Query(default=None),
-) -> list[User] | None:
+) -> Sequence[User] | None:
     """Retrieves user by query parameters."""
 
     query_parameters = UserQueryParametersModel(
@@ -127,8 +128,8 @@ def retrieve_user_by_query_parameters(
         role=role,
     )
 
-    retrieved_user = user_service.retrieve_by_query_parameters(
-        session=session, query_parameters=query_parameters
+    retrieved_user = await user_service.retrieve_by_query_parameters(
+        sqlmodel_session=sqlmodel_session, query_parameters=query_parameters
     )
 
     return retrieved_user
@@ -140,28 +141,30 @@ def retrieve_user_by_query_parameters(
     status_code=201,
     summary="Creates user",
 )
-def create_user(
-    *, session: Session = Depends(get_session), user: CreateUserRequestModel
+async def create_user(
+    *,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    user: CreateUserRequestModel,
 ) -> User | None:
     """Creates user."""
 
-    retrieved_user = user_service.retrieve_by_username(
-        session=session, user_username=user.username
+    retrieved_user = await user_service.retrieve_by_username(
+        sqlmodel_session=sqlmodel_session, user_username=user.username
     )
 
     if retrieved_user:
         raise UserUsernameAlreadyExistsException
 
-    retrieved_user = user_service.retrieve_by_email(
-        session=session, user_email=user.email
+    retrieved_user = await user_service.retrieve_by_email(
+        sqlmodel_session=sqlmodel_session, user_email=user.email
     )
 
     if retrieved_user:
         raise UserEmailAlreadyExistsException
 
-    user.role = role_service.retrieve_by_name(session=session, name=user.role.name)
-
-    created_user = user_service.create(session=session, user=user)
+    created_user = await user_service.create(
+        sqlmodel_session=sqlmodel_session, user=user
+    )
 
     return created_user
 
@@ -172,18 +175,20 @@ def create_user(
     status_code=200,
     summary="Updates current user",
 )
-def update_current_user(
+async def update_current_user(
     *,
     user: UpdateUserRequestModel,
-    session: Session = Depends(get_session),
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
     retrieved_user: User = Depends(retrieve_current_user),
 ) -> User | None:
     """Updates current user."""
 
-    user.role = role_service.retrieve_by_name(session=session, name=user.role.name)
+    user.role = await role_service.retrieve_by_name(
+        sqlmodel_session=sqlmodel_session, name=user.role.name
+    )
 
-    updated_user = user_service.update(
-        session=session, retrieved_user=retrieved_user, user=user
+    updated_user = await user_service.update(
+        sqlmodel_session=sqlmodel_session, retrieved_user=retrieved_user, user=user
     )
 
     return updated_user
@@ -195,23 +200,27 @@ def update_current_user(
     status_code=200,
     summary="Updates user by id",
 )
-def update_user(
+async def update_user(
     *,
     user_id: int,
     user: UpdateUserRequestModel,
-    session: Session = Depends(get_session),
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
 ) -> User | None:
     """Updates user."""
 
-    retrieved_user = user_service.retrieve_by_id(session=session, user_id=user_id)
+    retrieved_user = await user_service.retrieve_by_id(
+        sqlmodel_session=sqlmodel_session, user_id=user_id
+    )
 
     if not retrieved_user:
         raise UserNotFoundByIdException
 
-    user.role = role_service.retrieve_by_name(session=session, name=user.role.name)
+    user.role = await role_service.retrieve_by_name(
+        sqlmodel_session=sqlmodel_session, name=user.role.name
+    )
 
-    updated_user = user_service.update(
-        session=session, retrieved_user=retrieved_user, user=user
+    updated_user = await user_service.update(
+        sqlmodel_session=sqlmodel_session, retrieved_user=retrieved_user, user=user
     )
 
     return updated_user
@@ -222,10 +231,10 @@ def update_user(
     response_model=VerifyUserResponseModel,
     status_code=200,
 )
-def verify_current_user(
+async def verify_current_user(
     *,
     token: str,
-    session: Session = Depends(get_session),
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
     settings: Settings = Depends(get_settings),
 ) -> User | None:
     """Verifies current user."""
@@ -238,14 +247,16 @@ def verify_current_user(
     if not verified:
         raise InvalidAccessTokenException
 
-    retrieved_user = user_service.retrieve_by_email(
-        session=session, user_email=payload["email"]
+    retrieved_user = await user_service.retrieve_by_email(
+        sqlmodel_session=sqlmodel_session, user_email=payload["email"]
     )
 
     if not retrieved_user:
         raise UserNotFoundByEmailException
 
-    verified_user = user_service.verify(session=session, retrieved_user=retrieved_user)
+    verified_user = await user_service.verify(
+        sqlmodel_session=sqlmodel_session, retrieved_user=retrieved_user
+    )
 
     return verified_user
 
@@ -255,9 +266,9 @@ def verify_current_user(
     response_model=ChangeUserPasswordResponseModel,
     status_code=201,
 )
-def update_current_user_password(
+async def update_current_user_password(
     *,
-    session: Session = Depends(get_session),
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
     change_password: ChangeUserPasswordRequestModel,
     retrieved_user: User = Depends(retrieve_current_user),
 ) -> User | None:
@@ -269,8 +280,8 @@ def update_current_user_password(
     if change_password.password != change_password.password_confirmation:
         raise InvalidPasswordConfirmationException
 
-    updated_user = user_service.update_password(
-        session=session,
+    updated_user = await user_service.update_password(
+        sqlmodel_session=sqlmodel_session,
         retrieved_user=retrieved_user,
         password=change_password.password,
     )
@@ -323,14 +334,16 @@ def update_current_user_password(
     status_code=200,
     summary="Deletes current user",
 )
-def delete_current_user(
+async def delete_current_user(
     *,
-    session: Session = Depends(get_session),
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
     retrieved_user: User = Depends(retrieve_current_user),
 ) -> User | None:
     """Deletes current user."""
 
-    deleted_user = user_service.delete(session=session, retrieved_user=retrieved_user)
+    deleted_user = await user_service.delete(
+        sqlmodel_session=sqlmodel_session, retrieved_user=retrieved_user
+    )
 
     return deleted_user
 
@@ -341,16 +354,20 @@ def delete_current_user(
     status_code=200,
     summary="Deletes user",
 )
-def delete_user(
-    *, user_id: int, session: Session = Depends(get_session)
+async def delete_user(
+    *, user_id: int, sqlmodel_session: Session = Depends(get_sqlmodel_session)
 ) -> User | None:
     """Deletes user."""
 
-    retrieved_user = user_service.retrieve_by_id(session=session, user_id=user_id)
+    retrieved_user = await user_service.retrieve_by_id(
+        sqlmodel_session=sqlmodel_session, user_id=user_id
+    )
 
     if not retrieved_user:
         raise UserNotFoundByIdException
 
-    deleted_user = user_service.delete(session=session, retrieved_user=retrieved_user)
+    deleted_user = await user_service.delete(
+        sqlmodel_session=sqlmodel_session, retrieved_user=retrieved_user
+    )
 
     return deleted_user

@@ -1,45 +1,59 @@
-from typing import Any
+import json
+from typing import Any, Sequence
 from sqlmodel import select, Session
+from redis.asyncio.client import Redis
 from .models import Role
 from .schemas import CreateRoleRequestModel, RoleQueryParameters, UpdateRoleRequestModel
 
 
-def create(*, session: Session, role: CreateRoleRequestModel) -> Role | None:
+async def create(
+    *, sqlmodel_session: Session, role: CreateRoleRequestModel
+) -> Role | None:
     """Creates a new role object."""
 
     created_role = Role()
     created_role.name = role.name
 
-    session.add(created_role)
-    session.commit()
-    session.refresh(created_role)
+    sqlmodel_session.add(created_role)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(created_role)
 
     return created_role
 
 
-def retrieve_by_id(*, session: Session, id: int) -> Role | None:
+async def retrieve_by_id(
+    *, sqlmodel_session: Session, redis_client: Redis, role_id: int
+) -> Role | None:
     """Return a role object based on the given id."""
+    if cached_role := await redis_client.get(name=f"role_{role_id}"):
+        return Role(**json.loads(cached_role))
 
-    statement: Any = select(Role).where(Role.id == id)
+    await redis_client.get(name=f"role_{role_id}")
 
-    retrieved_role = session.exec(statement).one_or_none()
+    if retrieved_role := sqlmodel_session.exec(
+        select(Role).where(Role.id == role_id)
+    ).one_or_none():
+        await redis_client.set(
+            name=f"role_{role_id}",
+            value=retrieved_role.model_dump_json(),
+        )
 
     return retrieved_role
 
 
-def retrieve_by_name(*, session: Session, name: str) -> Role | None:
+async def retrieve_by_name(*, sqlmodel_session: Session, name: str) -> Role | None:
     """Return a role object based on the given name."""
 
     statement: Any = select(Role).where(Role.name == name)
 
-    retrieved_role = session.exec(statement).one_or_none()
+    retrieved_role = sqlmodel_session.exec(statement).one_or_none()
 
     return retrieved_role
 
 
-def retrieve_by_query_parameters(
-    *, session: Session, query_parameters: RoleQueryParameters
-) -> list[Role] | None:
+async def retrieve_by_query_parameters(
+    *, sqlmodel_session: Session, query_parameters: RoleQueryParameters
+) -> Sequence[Role] | None:
     """Return list of role objects based on the given query parameters."""
 
     offset = query_parameters.offset
@@ -52,30 +66,43 @@ def retrieve_by_query_parameters(
     ).items():
         statement = statement.filter(getattr(Role, attr).like(value))
 
-    retrieved_roles = session.exec(statement).all()
+    retrieved_roles = sqlmodel_session.exec(statement).all()
 
     return retrieved_roles
 
 
-def update(
-    *, session: Session, retrieved_role: Role, role: UpdateRoleRequestModel
+async def update(
+    *,
+    sqlmodel_session: Session,
+    redis_client: Redis,
+    retrieved_role: Role,
+    role: UpdateRoleRequestModel,
 ) -> Role | None:
     """Updates an existing role object."""
 
     retrieved_role.name = role.name
     updated_role = retrieved_role
 
-    session.add(updated_role)
-    session.commit()
-    session.refresh(updated_role)
+    sqlmodel_session.add(updated_role)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(updated_role)
+
+    await redis_client.set(
+        name=f"role_{updated_role.id}",
+        value=updated_role.model_dump_json(),
+    )
 
     return updated_role
 
 
-def delete(*, session: Session, retrieved_role: Role) -> Role | None:
+async def delete(
+    *, sqlmodel_session: Session, redis_client: Redis, retrieved_role: Role
+) -> Role | None:
     """Deletes an existing role object."""
 
-    session.delete(retrieved_role)
-    session.commit()
+    sqlmodel_session.delete(retrieved_role)
+    sqlmodel_session.commit()
+
+    await redis_client.delete(f"role_{retrieved_role.id}")
 
     return retrieved_role

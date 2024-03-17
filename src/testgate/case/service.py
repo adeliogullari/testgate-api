@@ -1,38 +1,53 @@
-from typing import List, Any
+import json
+from typing import Any, Sequence
 from sqlmodel import select, Session
+from redis.asyncio.client import Redis
 from .models import Case
 from .schemas import CreateCaseRequestModel, CaseQueryParameters, UpdateCaseRequestModel
 
 
-def create(*, session: Session, case: CreateCaseRequestModel) -> Case | None:
+async def create(
+    *, sqlmodel_session: Session, redis_client: Redis, case: CreateCaseRequestModel
+) -> Case | None:
     """Creates a new case object."""
 
-    created_case = Case()
-    created_case.name = case.name
-    created_case.description = case.description
-    created_case.result = case.result
+    created_case = Case(
+        name=case.name, description=case.description, result=case.result
+    )
 
-    session.add(created_case)
-    session.commit()
-    session.refresh(created_case)
+    sqlmodel_session.add(created_case)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(created_case)
+
+    await redis_client.set(
+        name=f"case_{created_case.id}", value=created_case.model_dump_json()
+    )
 
     return created_case
 
 
-def retrieve_by_id(*, session: Session, case_id: int) -> Case | None:
+async def retrieve_by_id(
+    *, sqlmodel_session: Session, redis_client: Redis, case_id: int
+) -> Case | None:
     """Returns a case object based on the given id."""
 
-    statement: Any = select(Case).where(Case.id == case_id)
+    if cached_case := await redis_client.get(name=f"case_{case_id}"):
+        return Case(**json.loads(cached_case))
 
-    retrieved_case = session.exec(statement).one_or_none()
+    if retrieved_case := sqlmodel_session.exec(
+        select(Case).where(Case.id == case_id)
+    ).one_or_none():
+        await redis_client.set(
+            name=f"case_{case_id}", value=retrieved_case.model_dump_json()
+        )
 
     return retrieved_case
 
 
-def retrieve_by_query_parameters(
-    *, session: Session, query_parameters: CaseQueryParameters
-) -> List[Case] | None:
-    """Return list of case objects based on the given query parameters."""
+async def retrieve_by_query_parameters(
+    *, sqlmodel_session: Session, query_parameters: CaseQueryParameters
+) -> Sequence[Case] | None:
+    """Returns list of case objects based on the given query parameters."""
 
     offset = query_parameters.offset
     limit = query_parameters.limit
@@ -44,13 +59,17 @@ def retrieve_by_query_parameters(
     ).items():
         statement = statement.where(getattr(Case, attr) == value)
 
-    retrieved_case = session.exec(statement).all()
+    retrieved_cases = sqlmodel_session.exec(statement).all()
 
-    return retrieved_case
+    return retrieved_cases
 
 
-def update(
-    *, session: Session, retrieved_case: Case, case: UpdateCaseRequestModel
+async def update(
+    *,
+    sqlmodel_session: Session,
+    redis_client: Redis,
+    retrieved_case: Case,
+    case: UpdateCaseRequestModel,
 ) -> Case | None:
     """Updates an existing case object."""
 
@@ -59,17 +78,25 @@ def update(
     retrieved_case.result = case.result
     updated_case = retrieved_case
 
-    session.add(updated_case)
-    session.commit()
-    session.refresh(updated_case)
+    sqlmodel_session.add(updated_case)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(updated_case)
+
+    await redis_client.set(
+        name=f"case_{updated_case.id}", value=updated_case.model_dump_json()
+    )
 
     return updated_case
 
 
-def delete(*, session: Session, retrieved_case: Case) -> Case | None:
+async def delete(
+    *, sqlmodel_session: Session, redis_client: Redis, retrieved_case: Case
+) -> Case | None:
     """Deletes an existing case object."""
 
-    session.delete(retrieved_case)
-    session.commit()
+    sqlmodel_session.delete(retrieved_case)
+    sqlmodel_session.commit()
+
+    await redis_client.delete(f"case_{retrieved_case.id}")
 
     return retrieved_case

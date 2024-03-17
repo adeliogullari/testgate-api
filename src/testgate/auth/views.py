@@ -15,18 +15,20 @@ from src.testgate.user.exceptions import (
     UserEmailAlreadyExistsException,
     InvalidPasswordException,
 )
-from src.testgate.database.service import get_session
+from src.testgate.database.service import get_sqlmodel_session
 from config import Settings, get_settings
 
 router = APIRouter(tags=["auth"])
 
 
 @router.post(path="/api/v1/auth/login", response_model=LoginResponse, status_code=200)
-def login(
-    *, session: Session = Depends(get_session), login_credentials: LoginCredentials
+async def login(
+    *,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    login_credentials: LoginCredentials,
 ) -> User:
-    retrieved_user = user_service.retrieve_by_email(
-        session=session, user_email=login_credentials.email
+    retrieved_user = await user_service.retrieve_by_email(
+        sqlmodel_session=sqlmodel_session, user_email=login_credentials.email
     )
 
     if not retrieved_user:
@@ -44,22 +46,26 @@ def login(
 @router.post(
     path="/api/v1/auth/register", response_model=RegisterResponse, status_code=200
 )
-def register(
+async def register(
     *,
-    session: Session = Depends(get_session),
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
     settings: Settings = Depends(get_settings),
     credentials: RegisterCredentials,
 ) -> User:
-    retrieved_user = user_service.retrieve_by_email(
-        session=session, user_email=credentials.email
+    retrieved_user = await user_service.retrieve_by_email(
+        sqlmodel_session=sqlmodel_session, user_email=credentials.email
     )
 
     if retrieved_user:
         raise UserEmailAlreadyExistsException
 
-    created_user = auth_service.register(session=session, credentials=credentials)
+    created_user = await auth_service.register(
+        sqlmodel_session=sqlmodel_session, credentials=credentials
+    )
 
     if not settings.testgate_smtp_email_verification:
-        created_user = user_service.verify(session=session, retrieved_user=created_user)
+        created_user = await user_service.verify(
+            sqlmodel_session=sqlmodel_session, retrieved_user=created_user
+        )
 
     return created_user

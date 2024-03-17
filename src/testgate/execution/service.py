@@ -1,5 +1,7 @@
-from typing import Optional, List, Any
+import json
+from typing import Any, Sequence
 from sqlmodel import select, Session
+from redis.asyncio.client import Redis
 from src.testgate.execution.models import Execution
 from src.testgate.execution.schemas import (
     CreateExecutionRequest,
@@ -8,80 +10,105 @@ from src.testgate.execution.schemas import (
 )
 
 
-def create(
-    *, session: Session, execution: CreateExecutionRequest
-) -> Optional[Execution]:
+async def create(
+    *, sqlmodel_session: Session, redis_client: Redis, execution: CreateExecutionRequest
+) -> Execution | None:
     """Creates a new execution object."""
 
-    created_execution = Execution()
-    created_execution.name = execution.name
-    created_execution.result = execution.result
+    created_execution = Execution(name=execution.name, result=execution.result)
 
-    session.add(created_execution)
-    session.commit()
-    session.refresh(created_execution)
+    sqlmodel_session.add(created_execution)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(created_execution)
+
+    await redis_client.set(
+        name=f"execution_{created_execution.id}",
+        value=created_execution.model_dump_json(),
+    )
 
     return created_execution
 
 
-def retrieve_by_id(*, session: Session, id: int) -> Optional[Execution]:
+async def retrieve_by_id(
+    *, sqlmodel_session: Session, redis_client: Redis, execution_id: int
+) -> Execution | None:
     """Returns an execution object based on the given id."""
 
-    statement: Any = select(Execution).where(Execution.id == id)
+    if cached_execution := await redis_client.get(name=f"execution_{execution_id}"):
+        return Execution(**json.loads(cached_execution))
 
-    retrieved_execution = session.exec(statement).one_or_none()
+    if retrieved_execution := sqlmodel_session.exec(
+        select(Execution).where(Execution.id == execution_id)
+    ).one_or_none():
+        await redis_client.set(
+            name=f"execution_{execution_id}",
+            value=retrieved_execution.model_dump_json(),
+        )
 
     return retrieved_execution
 
 
-def retrieve_by_name(*, session: Session, name: str) -> Optional[Execution]:
+async def retrieve_by_name(*, sqlmodel_session: Session, name: str) -> Execution | None:
     """Return an execution object based on the given name."""
 
     statement: Any = select(Execution).where(Execution.name == name)
 
-    retrieved_execution = session.exec(statement).one_or_none()
+    retrieved_execution = sqlmodel_session.exec(statement).one_or_none()
 
     return retrieved_execution
 
 
-def retrieve_by_query_parameters(
-    *, session: Session, query_parameters: ExecutionQueryParameters
-) -> Optional[List[Execution]]:
+async def retrieve_by_query_parameters(
+    *, sqlmodel_session: Session, query_parameters: ExecutionQueryParameters
+) -> Sequence[Execution] | None:
     """Return list of execution objects based on the given query parameters."""
 
-    statement: Any = select(Execution)
+    offset = query_parameters.offset
+    limit = query_parameters.limit
+
+    statement: Any = select(Execution).offset(offset).limit(limit)
 
     for attr, value in query_parameters.model_dump(exclude={"offset", "limit"}).items():
         if value:
-            statement = statement.filter(getattr(Execution, attr).like(value))
+            statement = statement.filter(getattr(Execution, attr) == value)
 
-    retrieved_executions = session.exec(statement).all()
+    retrieved_executions = sqlmodel_session.exec(statement).all()
 
     return retrieved_executions
 
 
-def update(
+async def update(
     *,
-    session: Session,
+    sqlmodel_session: Session,
+    redis_client: Redis,
     retrieved_execution: Execution,
     execution: UpdateExecutionRequest,
-) -> Optional[Execution]:
+) -> Execution | None:
     """Updates an existing execution object."""
 
     retrieved_execution.name = execution.name
     updated_execution = retrieved_execution
 
-    session.add(updated_execution)
-    session.commit()
-    session.refresh(updated_execution)
+    sqlmodel_session.add(updated_execution)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(updated_execution)
+
+    await redis_client.set(
+        name=f"execution_{updated_execution.id}",
+        value=updated_execution.model_dump_json(),
+    )
 
     return updated_execution
 
 
-def delete(*, session: Session, retrieved_execution: Execution) -> Optional[Execution]:
+async def delete(
+    *, sqlmodel_session: Session, redis_client: Redis, retrieved_execution: Execution
+) -> Execution | None:
     """Deletes an existing execution object."""
 
-    session.delete(retrieved_execution)
-    session.commit()
+    sqlmodel_session.delete(retrieved_execution)
+    sqlmodel_session.commit()
+
+    await redis_client.delete(f"execution_{retrieved_execution.id}")
 
     return retrieved_execution

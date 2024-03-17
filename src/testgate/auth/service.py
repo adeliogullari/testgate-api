@@ -3,7 +3,9 @@ from src.testgate.user.models import User
 from src.testgate.auth.schemas import RegisterCredentials
 
 
-def register(*, session: Session, credentials: RegisterCredentials) -> User:
+async def register(
+    *, sqlmodel_session: Session, credentials: RegisterCredentials
+) -> User:
     """Registers a new user."""
 
     created_user = User(
@@ -14,8 +16,8 @@ def register(*, session: Session, credentials: RegisterCredentials) -> User:
         password=credentials.password,
     )
 
-    session.add(created_user)
-    session.commit()
-    session.refresh(created_user)
+    sqlmodel_session.add(created_user)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(created_user)
 
     return created_user

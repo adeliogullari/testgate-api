@@ -1,8 +1,10 @@
 import pytest
 from pytest_factoryboy import register
-from typing import Any, Generator
+from typing import Any, Generator, AsyncGenerator
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from redis.asyncio import Redis
+from fakeredis import FakeAsyncRedis
 from sqlmodel import Session, SQLModel, create_engine
 from config import Settings, get_settings
 
@@ -13,8 +15,12 @@ from src.testgate.permission.views import router as permission_router
 from src.testgate.repository.views import router as repository_router
 from src.testgate.execution.views import router as execution_router
 from src.testgate.suite.views import router as suite_router
+
 from src.testgate.case.views import router as case_router
-from src.testgate.database.service import get_session
+from src.testgate.database.service import (
+    get_redis_client,
+    get_sqlmodel_session,
+)
 
 from tests.user.conftest import UserFactory
 from tests.role.conftest import RoleFactory
@@ -30,8 +36,6 @@ engine = create_engine(
     url=SQLALCHEMY_DATABASE_URL, echo=True, connect_args={"check_same_thread": False}
 )
 
-SessionTesting = Session(engine, autocommit=False, autoflush=False)
-
 register(UserFactory)
 register(RoleFactory)
 register(PermissionFactory)
@@ -45,20 +49,20 @@ register(CaseFactory)
 
 
 @pytest.fixture(autouse=True)
-def set_session_for_factory(db_session):
-    UserFactory._meta.sqlalchemy_session = db_session
-    RoleFactory._meta.sqlalchemy_session = db_session
-    PermissionFactory._meta.sqlalchemy_session = db_session
-    RepositoryFactory._meta.sqlalchemy_session = db_session
-    ExecutionResultFactory._meta.sqlalchemy_session = db_session
-    ExecutionFactory._meta.sqlalchemy_session = db_session
-    SuiteResultFactory._meta.sqlalchemy_session = db_session
-    SuiteFactory._meta.sqlalchemy_session = db_session
-    CaseResultFactory._meta.sqlalchemy_session = db_session
-    CaseFactory._meta.sqlalchemy_session = db_session
+async def set_session_for_factory(sqlmodel_session):
+    UserFactory._meta.sqlalchemy_session = sqlmodel_session
+    RoleFactory._meta.sqlalchemy_session = sqlmodel_session
+    PermissionFactory._meta.sqlalchemy_session = sqlmodel_session
+    RepositoryFactory._meta.sqlalchemy_session = sqlmodel_session
+    ExecutionResultFactory._meta.sqlalchemy_session = sqlmodel_session
+    ExecutionFactory._meta.sqlalchemy_session = sqlmodel_session
+    SuiteResultFactory._meta.sqlalchemy_session = sqlmodel_session
+    SuiteFactory._meta.sqlalchemy_session = sqlmodel_session
+    CaseResultFactory._meta.sqlalchemy_session = sqlmodel_session
+    CaseFactory._meta.sqlalchemy_session = sqlmodel_session
 
 
-def start_application():
+async def start_application() -> FastAPI | None:
     app = FastAPI()
     app.include_router(auth_router)
     app.include_router(user_router)
@@ -72,15 +76,15 @@ def start_application():
 
 
 @pytest.fixture
-def app() -> Generator[FastAPI, Any, None]:
-    SQLModel.metadata.create_all(engine)
-    _app = start_application()
+async def app() -> AsyncGenerator[FastAPI, Any]:
+    SQLModel.metadata.create_all(bind=engine)
+    _app = await start_application()
     yield _app
-    SQLModel.metadata.drop_all(engine)
+    SQLModel.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture
-def db_session(app: FastAPI):
+async def sqlmodel_session(app: FastAPI) -> AsyncGenerator[Session, Any]:
     connection = engine.connect()
     transaction = connection.begin()
     session = Session(bind=connection)
@@ -91,12 +95,22 @@ def db_session(app: FastAPI):
 
 
 @pytest.fixture
-def client(app: FastAPI, db_session: SessionTesting):
-    def _get_session():
-        try:
-            yield db_session
-        finally:
-            pass
+async def redis_client(app: FastAPI) -> AsyncGenerator[Redis, Any]:
+    client = FakeAsyncRedis()
+    yield await client
+    await client.aclose()
+
+
+@pytest.fixture
+async def client(
+    app: FastAPI, sqlmodel_session: Session, redis_client: Redis
+) -> AsyncGenerator[TestClient, Any]:
+    def _get_sqlmodel_session() -> Generator[Session, Any, Any]:
+        yield sqlmodel_session
+
+    async def _get_redis_client() -> AsyncGenerator[Redis, Any]:
+        await redis_client.flushdb()
+        yield redis_client
 
     def _get_settings():
         return Settings(
@@ -107,7 +121,8 @@ def client(app: FastAPI, db_session: SessionTesting):
             testgate_smtp_email_verification=False,
         )
 
-    app.dependency_overrides[get_session] = _get_session
+    app.dependency_overrides[get_sqlmodel_session] = _get_sqlmodel_session
+    app.dependency_overrides[get_redis_client] = _get_redis_client
     app.dependency_overrides[get_settings] = _get_settings
 
     with TestClient(app) as client:

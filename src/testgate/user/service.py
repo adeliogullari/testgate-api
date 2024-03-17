@@ -1,4 +1,4 @@
-from typing import Any, Optional, List
+from typing import Any, Sequence
 from sqlmodel import select, Session
 from src.testgate.user.models import User
 from src.testgate.user.schemas import (
@@ -9,39 +9,43 @@ from src.testgate.user.schemas import (
 from src.testgate.role.models import Role
 
 
-def retrieve_by_id(*, session: Session, user_id: int) -> User | None:
+async def retrieve_by_id(*, sqlmodel_session: Session, user_id: int) -> User | None:
     """Returns a user object based on the given user id."""
 
     statement: Any = select(User).where(User.id == user_id)
 
-    retrieved_user = session.exec(statement).one_or_none()
+    retrieved_user = sqlmodel_session.exec(statement).one_or_none()
 
     return retrieved_user
 
 
-def retrieve_by_username(*, session: Session, user_username: str) -> User | None:
+async def retrieve_by_username(
+    *, sqlmodel_session: Session, user_username: str
+) -> User | None:
     """Returns a user object based on the given user username."""
 
     statement: Any = select(User).where(User.username == user_username)
 
-    retrieved_user = session.exec(statement).one_or_none()
+    retrieved_user = sqlmodel_session.exec(statement).one_or_none()
 
     return retrieved_user
 
 
-def retrieve_by_email(*, session: Session, user_email: str) -> User | None:
+async def retrieve_by_email(
+    *, sqlmodel_session: Session, user_email: str
+) -> User | None:
     """Returns a user object based on the given user email."""
 
     statement: Any = select(User).where(User.email == user_email)
 
-    retrieved_user = session.exec(statement).one_or_none()
+    retrieved_user = sqlmodel_session.exec(statement).one_or_none()
 
     return retrieved_user
 
 
-def retrieve_by_query_parameters(
-    *, session: Session, query_parameters: UserQueryParametersModel
-) -> Optional[List[User]]:
+async def retrieve_by_query_parameters(
+    *, sqlmodel_session: Session, query_parameters: UserQueryParametersModel
+) -> Sequence[User] | None:
     """Returns a user object based on the given query parameters."""
 
     offset = query_parameters.offset
@@ -54,12 +58,14 @@ def retrieve_by_query_parameters(
     ).items():
         statement = statement.where(getattr(User, attr) == value)
 
-    retrieved_user = session.exec(statement).all()
+    retrieved_user = sqlmodel_session.exec(statement).all()
 
     return retrieved_user
 
 
-def create(*, session: Session, user: CreateUserRequestModel) -> Optional[User]:
+async def create(
+    *, sqlmodel_session: Session, user: CreateUserRequestModel
+) -> User | None:
     """Creates a new user."""
 
     created_user = User(
@@ -73,16 +79,16 @@ def create(*, session: Session, user: CreateUserRequestModel) -> Optional[User]:
         role=user.role,
     )
 
-    session.add(created_user)
-    session.commit()
-    session.refresh(created_user)
+    sqlmodel_session.add(created_user)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(created_user)
 
     return created_user
 
 
-def update(
-    *, session: Session, retrieved_user: User, user: UpdateUserRequestModel
-) -> Optional[User]:
+async def update(
+    *, sqlmodel_session: Session, retrieved_user: User, user: UpdateUserRequestModel
+) -> User | None:
     """Updates an existing user."""
 
     retrieved_user.firstname = user.firstname
@@ -94,47 +100,47 @@ def update(
 
     updated_user = retrieved_user
 
-    session.add(updated_user)
-    session.commit()
-    session.refresh(updated_user)
+    sqlmodel_session.add(updated_user)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(updated_user)
 
     return updated_user
 
 
-def update_password(
-    *, session: Session, retrieved_user: User, password: str
-) -> Optional[User]:
+async def update_password(
+    *, sqlmodel_session: Session, retrieved_user: User, password: str
+) -> User | None:
     """Updates an existing password"""
 
     retrieved_user.password = password
 
     updated_user = retrieved_user
 
-    session.add(updated_user)
-    session.commit()
-    session.refresh(updated_user)
+    sqlmodel_session.add(updated_user)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(updated_user)
 
     return updated_user
 
 
-def verify(*, session: Session, retrieved_user: User) -> User:
+async def verify(*, sqlmodel_session: Session, retrieved_user: User) -> User | None:
     """Verifies an existing user."""
 
     retrieved_user.verified = True
 
     verified_user = retrieved_user
 
-    session.add(verified_user)
-    session.commit()
-    session.refresh(verified_user)
+    sqlmodel_session.add(verified_user)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(verified_user)
 
     return verified_user
 
 
-def delete(*, session: Session, retrieved_user: User) -> Optional[User]:
+async def delete(*, sqlmodel_session: Session, retrieved_user: User) -> User | None:
     """Deletes an existing user."""
 
-    session.delete(retrieved_user)
-    session.commit()
+    sqlmodel_session.delete(retrieved_user)
+    sqlmodel_session.commit()
 
     return retrieved_user

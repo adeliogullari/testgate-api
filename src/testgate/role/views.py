@@ -1,7 +1,7 @@
-from typing import List
+from typing import List, Sequence
 from sqlmodel import Session
 from fastapi import status, Depends, APIRouter, HTTPException, Query
-
+from redis.asyncio.client import Redis
 from .models import Role
 from .service import (
     retrieve_by_id,
@@ -20,7 +20,7 @@ from .schemas import (
     UpdateRoleResponseModel,
     DeleteRoleResponseModel,
 )
-from src.testgate.database.service import get_session
+from src.testgate.database.service import get_sqlmodel_session, get_redis_client
 
 router = APIRouter(tags=["roles"])
 
@@ -34,16 +34,21 @@ RoleAlreadyExistsException = HTTPException(
 
 
 @router.get(
-    path="/api/v1/role/{id}",
+    path="/api/v1/role/{role_id}",
     response_model=None,
     status_code=200,
 )
-def retrieve_role_by_id(
-    *, session: Session = Depends(get_session), id: int
+async def retrieve_role_by_id(
+    *,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    redis_client=Depends(get_redis_client),
+    role_id: int,
 ) -> Role | None:
     """Retrieve role by id."""
 
-    retrieved_role = retrieve_by_id(session=session, id=id)
+    retrieved_role = await retrieve_by_id(
+        sqlmodel_session=sqlmodel_session, redis_client=redis_client, role_id=role_id
+    )
 
     if not retrieved_role:
         raise RoleNotFoundException
@@ -56,19 +61,19 @@ def retrieve_role_by_id(
     response_model=List[RetrieveRoleResponseModel],
     status_code=200,
 )
-def retrieve_role_by_query_parameters(
+async def retrieve_role_by_query_parameters(
     *,
-    session: Session = Depends(get_session),
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
     name: str = Query(default=None),
-) -> list[Role] | None:
+) -> Sequence[Role] | None:
     """Search role by name."""
 
     query_parameters = RoleQueryParameters(offset=offset, limit=limit, name=name)
 
-    retrieved_role = retrieve_by_query_parameters(
-        session=session, query_parameters=query_parameters
+    retrieved_role = await retrieve_by_query_parameters(
+        sqlmodel_session=sqlmodel_session, query_parameters=query_parameters
     )
 
     return retrieved_role
@@ -79,54 +84,80 @@ def retrieve_role_by_query_parameters(
     response_model=CreateRoleResponseModel,
     status_code=201,
 )
-def create_role(
-    *, session: Session = Depends(get_session), role: CreateRoleRequestModel
+async def create_role(
+    *,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    role: CreateRoleRequestModel,
 ) -> Role | None:
     """Creates role."""
 
-    retrieved_role = retrieve_by_name(session=session, name=role.name)
+    retrieved_role = await retrieve_by_name(
+        sqlmodel_session=sqlmodel_session, name=role.name
+    )
 
     if retrieved_role:
         raise RoleAlreadyExistsException
 
-    created_role = create(session=session, role=role)
+    created_role = await create(sqlmodel_session=sqlmodel_session, role=role)
 
     return created_role
 
 
 @router.put(
-    path="/api/v1/role/{id}",
+    path="/api/v1/role/{role_id}",
     response_model=UpdateRoleResponseModel,
     status_code=200,
 )
-def update_role(
-    *, session: Session = Depends(get_session), id: int, role: UpdateRoleRequestModel
+async def update_role(
+    *,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    redis_client: Redis = Depends(get_redis_client),
+    role_id: int,
+    role: UpdateRoleRequestModel,
 ) -> Role | None:
     """Updates role."""
 
-    retrieved_role = retrieve_by_id(session=session, id=id)
+    retrieved_role = await retrieve_by_id(
+        sqlmodel_session=sqlmodel_session, redis_client=redis_client, role_id=role_id
+    )
 
     if not retrieved_role:
         raise RoleNotFoundException
 
-    updated_role = update(session=session, retrieved_role=retrieved_role, role=role)
+    updated_role = await update(
+        sqlmodel_session=sqlmodel_session,
+        redis_client=redis_client,
+        retrieved_role=retrieved_role,
+        role=role,
+    )
 
     return updated_role
 
 
 @router.delete(
-    path="/api/v1/role/{id}",
+    path="/api/v1/role/{role_id}",
     response_model=DeleteRoleResponseModel,
     status_code=200,
 )
-def delete_role(*, session: Session = Depends(get_session), id: int) -> Role | None:
+async def delete_role(
+    *,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    redis_client: Redis = Depends(get_redis_client),
+    role_id: int,
+) -> Role | None:
     """Deletes role."""
 
-    retrieved_role = retrieve_by_id(session=session, id=id)
+    retrieved_role = await retrieve_by_id(
+        sqlmodel_session=sqlmodel_session, redis_client=redis_client, role_id=role_id
+    )
 
     if not retrieved_role:
         raise RoleNotFoundException
 
-    deleted_role = delete(session=session, retrieved_role=retrieved_role)
+    deleted_role = await delete(
+        sqlmodel_session=sqlmodel_session,
+        redis_client=redis_client,
+        retrieved_role=retrieved_role,
+    )
 
     return deleted_role

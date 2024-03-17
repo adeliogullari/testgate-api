@@ -1,3 +1,4 @@
+from sqlmodel import Session
 from src.testgate.auth.crypto.password.library import PasswordHashLibrary
 from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy
 from src.testgate.user.models import User
@@ -21,27 +22,31 @@ from src.testgate.user.service import (
 password_pash_library = PasswordHashLibrary(ScryptPasswordHashStrategy())
 
 
-def test_retrieve_by_id(db_session, user: User):
-    retrieved_user = retrieve_by_id(session=db_session, user_id=user.id)
+async def test_retrieve_by_id(sqlmodel_session: Session, user: User):
+    retrieved_user = await retrieve_by_id(
+        sqlmodel_session=sqlmodel_session, user_id=user.id
+    )
 
     assert retrieved_user.id == user.id
 
 
-def test_retrieve_by_username(db_session, user: User):
-    retrieved_user = retrieve_by_username(
-        session=db_session, user_username=user.username
+async def test_retrieve_by_username(sqlmodel_session: Session, user: User):
+    retrieved_user = await retrieve_by_username(
+        sqlmodel_session=sqlmodel_session, user_username=user.username
     )
 
     assert retrieved_user.username == user.username
 
 
-def test_retrieve_by_email(db_session, user: User):
-    retrieved_user = retrieve_by_email(session=db_session, user_email=user.email)
+async def test_retrieve_by_email(sqlmodel_session: Session, user: User):
+    retrieved_user = await retrieve_by_email(
+        sqlmodel_session=sqlmodel_session, user_email=user.email
+    )
 
     assert retrieved_user.email == user.email
 
 
-def test_retrieve_by_query_parameters(db_session, user: User):
+async def test_retrieve_by_query_parameters(sqlmodel_session: Session, user: User):
     query_parameters = UserQueryParametersModel(
         offset=0,
         limit=1,
@@ -52,52 +57,56 @@ def test_retrieve_by_query_parameters(db_session, user: User):
         verified=user.verified,
     )
 
-    retrieved_users = retrieve_by_query_parameters(
-        session=db_session, query_parameters=query_parameters
+    retrieved_users = await retrieve_by_query_parameters(
+        sqlmodel_session=sqlmodel_session, query_parameters=query_parameters
     )
 
     assert retrieved_users[0].id == user.id
 
 
-def test_create(db_session, user_factory):
+async def test_create(sqlmodel_session: Session, user_factory):
     user = CreateUserRequestModel(
         **user_factory.stub(password="password_2024").__dict__
     )
 
-    created_user = create(session=db_session, user=user)
+    created_user = await create(sqlmodel_session=sqlmodel_session, user=user)
 
     assert created_user.email == user.email
 
 
-def test_update(db_session, user_factory, user: User):
+async def test_update(sqlmodel_session: Session, user_factory, user: User):
     update_user = UpdateUserRequestModel(
         **user_factory.stub(password="password_2024").__dict__
     )
 
-    updated_user = update(session=db_session, retrieved_user=user, user=update_user)
+    updated_user = await update(
+        sqlmodel_session=sqlmodel_session, retrieved_user=user, user=update_user
+    )
 
     assert updated_user.id == user.id
 
 
-def test_update_password(db_session, user_factory, user: User):
+async def test_update_password(sqlmodel_session: Session, user_factory, user: User):
     retrieved_user = user_factory.stub(
         password=password_pash_library.encode("password_2024")
     )
 
-    updated_user = update_password(
-        session=db_session, retrieved_user=user, password=retrieved_user.password
+    updated_user = await update_password(
+        sqlmodel_session=sqlmodel_session,
+        retrieved_user=user,
+        password=retrieved_user.password,
     )
 
     assert updated_user.password == user.password
 
 
-def test_verify(db_session, user):
-    verified_user = verify(session=db_session, retrieved_user=user)
+async def test_verify(sqlmodel_session: Session, user):
+    verified_user = await verify(sqlmodel_session=sqlmodel_session, retrieved_user=user)
 
     assert verified_user.verified is True
 
 
-def test_delete(db_session, user: User):
-    deleted_user = delete(session=db_session, retrieved_user=user)
+async def test_delete(sqlmodel_session: Session, user: User):
+    deleted_user = await delete(sqlmodel_session=sqlmodel_session, retrieved_user=user)
 
     assert deleted_user.id == user.id

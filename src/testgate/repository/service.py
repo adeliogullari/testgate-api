@@ -1,5 +1,7 @@
+import json
 from typing import Optional, List, Any
 from sqlmodel import select, Session
+from redis.asyncio.client import Redis
 from src.testgate.repository.models import Repository
 from src.testgate.repository.schemas import (
     CreateRepositoryRequest,
@@ -8,43 +10,62 @@ from src.testgate.repository.schemas import (
 )
 
 
-def create(
-    *, session: Session, repository: CreateRepositoryRequest
-) -> Optional[Repository]:
-    """Creates a new permission object."""
+async def create(
+    *,
+    sqlmodel_session: Session,
+    redis_client: Redis,
+    repository: CreateRepositoryRequest,
+) -> Repository | None:
+    """Creates a new repository object."""
 
     created_repository = Repository(name=repository.name)
 
-    session.add(created_repository)
-    session.commit()
-    session.refresh(created_repository)
+    sqlmodel_session.add(created_repository)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(created_repository)
+
+    await redis_client.set(
+        name=f"repository_{created_repository.id}",
+        value=created_repository.model_dump_json(),
+    )
 
     return created_repository
 
 
-def retrieve_by_id(*, session: Session, repository_id: int) -> Optional[Repository]:
-    """Return a repository object based on the given id."""
+async def retrieve_by_id(
+    *, sqlmodel_session: Session, redis_client: Redis, repository_id: int
+) -> Repository | None:
+    """Returns a repository object based on the given id."""
 
-    statement: Any = select(Repository).where(Repository.id == repository_id)
+    if cached_repository := await redis_client.get(name=f"repository_{repository_id}"):
+        return Repository(**json.loads(cached_repository))
 
-    retrieved_repository = session.exec(statement).one_or_none()
+    if retrieved_repository := sqlmodel_session.exec(
+        select(Repository).where(Repository.id == repository_id)
+    ).one_or_none():
+        await redis_client.set(
+            name=f"repository_{repository_id}",
+            value=retrieved_repository.model_dump_json(),
+        )
 
     return retrieved_repository
 
 
-def retrieve_by_name(*, session: Session, repository_name: str) -> Optional[Repository]:
+async def retrieve_by_name(
+    *, sqlmodel_session: Session, repository_name: str
+) -> Repository | None:
     """Return a repository object based on the given name."""
 
     statement: Any = select(Repository).where(Repository.name == repository_name)
 
-    retrieved_repository = session.exec(statement).one_or_none()
+    retrieved_repository = sqlmodel_session.exec(statement).one_or_none()
 
     return retrieved_repository
 
 
-def retrieve_by_query_parameters(
-    *, session: Session, query_parameters: RepositoryQueryParameters
-) -> Optional[List[Repository]]:
+async def retrieve_by_query_parameters(
+    *, sqlmodel_session: Session, query_parameters: RepositoryQueryParameters
+) -> List[Repository] | None:
     """Return list of repository objects based on the given query parameters."""
 
     offset = query_parameters.offset
@@ -58,35 +79,43 @@ def retrieve_by_query_parameters(
         if value:
             statement = statement.filter(getattr(Repository, attr).like(value))
 
-    retrieved_permissions = session.exec(statement).all()
+    retrieved_permissions = sqlmodel_session.exec(statement).all()
 
     return retrieved_permissions
 
 
-def update(
+async def update(
     *,
-    session: Session,
+    sqlmodel_session: Session,
+    redis_client: Redis,
     retrieved_repository: Repository,
     repository: UpdateRepositoryRequest,
 ) -> Optional[Repository]:
     """Updates an existing repository object."""
 
     retrieved_repository.name = repository.name
-    updated_permission = retrieved_repository
+    updated_repository = retrieved_repository
 
-    session.add(updated_permission)
-    session.commit()
-    session.refresh(updated_permission)
+    sqlmodel_session.add(updated_repository)
+    sqlmodel_session.commit()
+    sqlmodel_session.refresh(updated_repository)
 
-    return updated_permission
+    await redis_client.set(
+        name=f"repository_{updated_repository.id}",
+        value=updated_repository.model_dump_json(),
+    )
+
+    return updated_repository
 
 
-def delete(
-    *, session: Session, retrieved_repository: Repository
+async def delete(
+    *, sqlmodel_session: Session, redis_client: Redis, retrieved_repository: Repository
 ) -> Optional[Repository]:
     """Deletes an existing repository object."""
 
-    session.delete(retrieved_repository)
-    session.commit()
+    sqlmodel_session.delete(retrieved_repository)
+    sqlmodel_session.commit()
+
+    await redis_client.delete(f"repository_{retrieved_repository.id}")
 
     return retrieved_repository

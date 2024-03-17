@@ -1,5 +1,5 @@
 import pytest
-
+from fastapi.testclient import TestClient
 from src.testgate.auth.crypto.password.library import PasswordHashLibrary
 from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy
 
@@ -10,7 +10,7 @@ password_hash_library = PasswordHashLibrary(ScryptPasswordHashStrategy())
 @pytest.mark.parametrize(
     "user__password", [password_hash_library.encode("password_2024")]
 )
-def test_login(client, user_factory, user):
+async def test_login(client: TestClient, user_factory, user):
     response = client.post(
         url="/api/v1/auth/login",
         json=user_factory.stub(email=user.email, password="password_2024").__dict__,
@@ -24,7 +24,7 @@ def test_login(client, user_factory, user):
 @pytest.mark.parametrize(
     "user__password", [password_hash_library.encode("password_2024")]
 )
-def test_login_with_invalid_email(client, user_factory, user):
+async def test_login_with_invalid_email(client: TestClient, user_factory, user):
     response = client.post(
         url="/api/v1/auth/login",
         json=user_factory.stub(
@@ -37,7 +37,7 @@ def test_login_with_invalid_email(client, user_factory, user):
 @pytest.mark.parametrize(
     "user__password", [password_hash_library.encode("password_2024")]
 )
-def test_login_with_invalid_verification(client, user_factory, user):
+async def test_login_with_invalid_verification(client: TestClient, user_factory, user):
     response = client.post(
         url="/api/v1/auth/login",
         json=user_factory.stub(email=user.email, password="password_2024").__dict__,
@@ -50,7 +50,7 @@ def test_login_with_invalid_verification(client, user_factory, user):
 @pytest.mark.parametrize(
     "user__password", [password_hash_library.encode("password_2024")]
 )
-def test_login_with_invalid_password(client, user_factory, user):
+async def test_login_with_invalid_password(client: TestClient, user_factory, user):
     response = client.post(
         url="/api/v1/auth/login",
         json=user_factory.stub(
@@ -61,7 +61,7 @@ def test_login_with_invalid_password(client, user_factory, user):
     assert response.status_code == 403
 
 
-def test_register(client, user_factory):
+async def test_register(client: TestClient, user_factory):
     response = client.post(
         url="/api/v1/auth/register",
         json=user_factory.stub(password="password_2024").__dict__,
@@ -70,7 +70,7 @@ def test_register(client, user_factory):
     assert response.status_code == 200
 
 
-def test_register_with_existing_email(client, user_factory, user):
+async def test_register_with_existing_email(client: TestClient, user_factory, user):
     response = client.post(
         url="/api/v1/auth/register",
         json=user_factory.stub(email=user.email, password="password_2024").__dict__,

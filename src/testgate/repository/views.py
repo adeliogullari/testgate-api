@@ -1,6 +1,7 @@
 from typing import List
 from sqlmodel import Session
 from fastapi import Query, Depends, APIRouter
+from redis.asyncio.client import Redis
 from .exceptions import RepositoryNotFoundException, RepositoryAlreadyExistsException
 from .models import Repository
 from .schemas import (
@@ -20,7 +21,7 @@ from .service import (
     update,
     delete,
 )
-from src.testgate.database.service import get_session
+from src.testgate.database.service import get_sqlmodel_session, get_redis_client
 
 router = APIRouter(tags=["repositories"])
 
@@ -30,12 +31,19 @@ router = APIRouter(tags=["repositories"])
     response_model=RetrieveRepositoryResponse,
     status_code=200,
 )
-def retrieve_repository_by_id(
-    *, session: Session = Depends(get_session), repository_id: int
+async def retrieve_repository_by_id(
+    *,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    redis_client: Redis = Depends(get_redis_client),
+    repository_id: int,
 ) -> Repository | None:
     """Retrieve repository by id."""
 
-    retrieved_repository = retrieve_by_id(session=session, repository_id=repository_id)
+    retrieved_repository = await retrieve_by_id(
+        sqlmodel_session=sqlmodel_session,
+        redis_client=redis_client,
+        repository_id=repository_id,
+    )
 
     if not retrieved_repository:
         raise RepositoryNotFoundException
@@ -48,9 +56,9 @@ def retrieve_repository_by_id(
     response_model=List[RetrieveRepositoryResponse],
     status_code=200,
 )
-def retrieve_repository_by_query_parameters(
+async def retrieve_repository_by_query_parameters(
     *,
-    session: Session = Depends(get_session),
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
     name: str = Query(default=None),
@@ -59,8 +67,8 @@ def retrieve_repository_by_query_parameters(
 
     query_repository = RepositoryQueryParameters(offset=offset, limit=limit, name=name)
 
-    retrieved_repository = retrieve_by_query_parameters(
-        session=session, query_parameters=query_repository
+    retrieved_repository = await retrieve_by_query_parameters(
+        sqlmodel_session=sqlmodel_session, query_parameters=query_repository
     )
 
     return retrieved_repository
@@ -71,19 +79,26 @@ def retrieve_repository_by_query_parameters(
     response_model=CreateRepositoryResponse,
     status_code=201,
 )
-def create_repository(
-    *, session: Session = Depends(get_session), repository: CreateRepositoryRequest
+async def create_repository(
+    *,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    redis_client=Depends(get_redis_client),
+    repository: CreateRepositoryRequest,
 ) -> Repository | None:
     """Creates repository."""
 
-    retrieved_repository = retrieve_by_name(
-        session=session, repository_name=repository.name
+    retrieved_repository = await retrieve_by_name(
+        sqlmodel_session=sqlmodel_session, repository_name=repository.name
     )
 
     if retrieved_repository:
         raise RepositoryAlreadyExistsException
 
-    created_repository = create(session=session, repository=repository)
+    created_repository = await create(
+        sqlmodel_session=sqlmodel_session,
+        redis_client=redis_client,
+        repository=repository,
+    )
 
     return created_repository
 
@@ -93,21 +108,27 @@ def create_repository(
     response_model=UpdateRepositoryResponse,
     status_code=200,
 )
-def update_repository(
+async def update_repository(
     *,
-    session: Session = Depends(get_session),
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    redis_client: Redis = Depends(get_redis_client),
     repository_id: int,
     repository: UpdateRepositoryRequest,
 ) -> Repository | None:
     """Updates repository."""
 
-    retrieved_repository = retrieve_by_id(session=session, repository_id=repository_id)
+    retrieved_repository = await retrieve_by_id(
+        sqlmodel_session=sqlmodel_session,
+        redis_client=redis_client,
+        repository_id=repository_id,
+    )
 
     if not retrieved_repository:
         raise RepositoryNotFoundException
 
-    updated_repository = update(
-        session=session,
+    updated_repository = await update(
+        sqlmodel_session=sqlmodel_session,
+        redis_client=redis_client,
         retrieved_repository=retrieved_repository,
         repository=repository,
     )
@@ -120,18 +141,23 @@ def update_repository(
     response_model=DeleteRepositoryResponse,
     status_code=200,
 )
-def delete_repository(
-    *, session: Session = Depends(get_session), repository_id: int
+async def delete_repository(
+    *,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    redis_client: Redis = Depends(get_redis_client),
+    repository_id: int,
 ) -> Repository | None:
     """Deletes repository."""
 
-    retrieved_repository = retrieve_by_id(session=session, repository_id=repository_id)
+    retrieved_repository = await retrieve_by_id(
+        sqlmodel_session=sqlmodel_session, redis_client=redis_client, repository_id=repository_id
+    )
 
     if not retrieved_repository:
         raise RepositoryNotFoundException
 
-    deleted_repository = delete(
-        session=session, retrieved_repository=retrieved_repository
+    deleted_repository = await delete(
+        sqlmodel_session=sqlmodel_session, redis_client=redis_client, retrieved_repository=retrieved_repository
     )
 
     return deleted_repository

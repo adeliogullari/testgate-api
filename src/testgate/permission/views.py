@@ -1,5 +1,6 @@
 from typing import List
 from sqlmodel import Session
+from redis.asyncio.client import Redis
 from fastapi import Query, Depends, APIRouter
 from .exceptions import PermissionNotFoundException, PermissionAlreadyExistsException
 from .schemas import (
@@ -20,22 +21,29 @@ from .service import (
     update,
     delete,
 )
-from src.testgate.database.service import get_session
+from src.testgate.database.service import get_sqlmodel_session, get_redis_client
 
 router = APIRouter(tags=["permissions"])
 
 
 @router.get(
-    path="/api/v1/permission/{id}",
+    path="/api/v1/permission/{permission_id}",
     response_model=RetrievePermissionResponse,
     status_code=200,
 )
-def retrieve_permission_by_id(
-    *, session: Session = Depends(get_session), id: int
+async def retrieve_permission_by_id(
+    *,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    redis_client: Redis = Depends(get_redis_client),
+    permission_id: int,
 ) -> Permission | None:
     """Retrieve permission by id."""
 
-    retrieved_permission = retrieve_by_id(session=session, id=id)
+    retrieved_permission = await retrieve_by_id(
+        sqlmodel_session=sqlmodel_session,
+        redis_client=redis_client,
+        permission_id=permission_id,
+    )
 
     if not retrieved_permission:
         raise PermissionNotFoundException
@@ -48,9 +56,9 @@ def retrieve_permission_by_id(
     response_model=List[RetrievePermissionResponse],
     status_code=200,
 )
-def retrieve_permission_by_query_parameters(
+async def retrieve_permission_by_query_parameters(
     *,
-    session: Session = Depends(get_session),
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
     name: str = Query(default=None),
@@ -59,8 +67,8 @@ def retrieve_permission_by_query_parameters(
 
     query_parameters = PermissionQueryParameters(offset=offset, limit=limit, name=name)
 
-    retrieved_permission = retrieve_by_query_parameters(
-        session=session, query_parameters=query_parameters
+    retrieved_permission = await retrieve_by_query_parameters(
+        sqlmodel_session=sqlmodel_session, query_parameters=query_parameters
     )
 
     return retrieved_permission
@@ -69,41 +77,52 @@ def retrieve_permission_by_query_parameters(
 @router.post(
     path="/api/v1/permissions", response_model=CreatePermissionResponse, status_code=201
 )
-def create_permission(
-    *, session: Session = Depends(get_session), permission: CreatePermissionRequest
+async def create_permission(
+    *,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    permission: CreatePermissionRequest,
 ) -> Permission | None:
     """Creates permission."""
 
-    retrieved_permission = retrieve_by_name(session=session, name=permission.name)
+    retrieved_permission = await retrieve_by_name(
+        sqlmodel_session=sqlmodel_session, permission_name=permission.name
+    )
 
     if retrieved_permission:
         raise PermissionAlreadyExistsException
 
-    created_permission = create(session=session, permission=permission)
+    created_permission = await create(
+        sqlmodel_session=sqlmodel_session, permission=permission
+    )
 
     return created_permission
 
 
 @router.put(
-    path="/api/v1/permission/{id}",
+    path="/api/v1/permission/{permission_id}",
     response_model=UpdatePermissionResponse,
     status_code=200,
 )
-def update_permission(
+async def update_permission(
     *,
-    session: Session = Depends(get_session),
-    id: int,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    redis_client: Redis = Depends(get_redis_client),
+    permission_id: int,
     permission: UpdatePermissionRequest,
 ) -> Permission | None:
     """Updates permission."""
 
-    retrieved_permission = retrieve_by_id(session=session, id=id)
+    retrieved_permission = await retrieve_by_id(
+        sqlmodel_session=sqlmodel_session,
+        redis_client=redis_client,
+        permission_id=permission_id,
+    )
 
     if not retrieved_permission:
         raise PermissionNotFoundException
 
-    updated_permission = update(
-        session=session,
+    updated_permission = await update(
+        sqlmodel_session=sqlmodel_session,
         retrieved_permission=retrieved_permission,
         permission=permission,
     )
@@ -112,22 +131,29 @@ def update_permission(
 
 
 @router.delete(
-    path="/api/v1/permission/{id}",
+    path="/api/v1/permission/{permission_id}",
     response_model=DeletePermissionResponse,
     status_code=200,
 )
-def delete_permission(
-    *, session: Session = Depends(get_session), id: int
+async def delete_permission(
+    *,
+    sqlmodel_session: Session = Depends(get_sqlmodel_session),
+    redis_client=Depends(get_redis_client),
+    permission_id: int,
 ) -> Permission | None:
     """Deletes permission."""
 
-    retrieved_permission = retrieve_by_id(session=session, id=id)
+    retrieved_permission = await retrieve_by_id(
+        sqlmodel_session=sqlmodel_session,
+        redis_client=redis_client,
+        permission_id=permission_id,
+    )
 
     if not retrieved_permission:
         raise PermissionNotFoundException
 
-    deleted_permission = delete(
-        session=session, retrieved_permission=retrieved_permission
+    deleted_permission = await delete(
+        sqlmodel_session=sqlmodel_session, retrieved_permission=retrieved_permission
     )
 
     return deleted_permission
