@@ -150,14 +150,18 @@ async def delete_repository(
     """Deletes repository."""
 
     retrieved_repository = await retrieve_by_id(
-        sqlmodel_session=sqlmodel_session, redis_client=redis_client, repository_id=repository_id
+        sqlmodel_session=sqlmodel_session,
+        redis_client=redis_client,
+        repository_id=repository_id,
     )
 
     if not retrieved_repository:
         raise RepositoryNotFoundException
 
     deleted_repository = await delete(
-        sqlmodel_session=sqlmodel_session, redis_client=redis_client, retrieved_repository=retrieved_repository
+        sqlmodel_session=sqlmodel_session,
+        redis_client=redis_client,
+        retrieved_repository=retrieved_repository,
     )
 
     return deleted_repository

@@ -11,12 +11,3 @@ pydantic-settings==2.2.1
 email-validator==2.1.1
 python-dotenv==1.0.1
 alembic==1.13.1
-tox==4.14.1
-pytest==8.1.1
-pytest-asyncio==0.23.5
-factory-boy==3.3.0
-pytest-factoryboy==2.7.0
-fakeredis==2.21.3
-mypy==1.9.0
-ruff==0.3.3
-coverage==7.4.4

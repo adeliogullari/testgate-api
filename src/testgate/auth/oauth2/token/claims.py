@@ -55,11 +55,17 @@ class RegisteredClaims:
     ) -> bool:
         now = datetime.utcnow().timestamp()
         verified_iss = self._verify_iss(iss=iss)
+        print(verified_iss)
         verified_sub = self._verify_sub(sub=sub)
+        print(verified_sub)
         verified_aud = self._verify_aud(aud=aud)
+        print(verified_aud)
         verified_exp = self._verify_exp(now=now)
+        print(verified_exp)
         verified_nbf = self._verify_nbf(now=now)
+        print(verified_nbf)
         verified_iat = self._verify_iat(now=now)
+        print(verified_iat)
         return (
             verified_iss
             and verified_sub

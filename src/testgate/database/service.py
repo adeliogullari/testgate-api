@@ -1,4 +1,4 @@
-from typing import Any, Generator, AsyncGenerator
+from typing import Any, AsyncGenerator
 from config import Settings
 from alembic import command
 from alembic.config import Config

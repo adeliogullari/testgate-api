@@ -16,3 +16,10 @@ docker run \
     -e SONAR_TOKEN="sqp_44e5d7973b0021efcf39e4e7d4ffcd96126f474e" \
     -v "$(pwd):/usr/src" \
     sonarsource/sonar-scanner-cli
+
+docker build -t getting-started .
+
+docker build -t groot .
+docker tag groot:latest groot:staging
+
+Bug in claims verify, you should check

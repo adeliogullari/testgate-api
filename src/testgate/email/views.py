@@ -1,11 +1,8 @@
-from sqlmodel import Session
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from src.testgate.email.schema import SendEmailModel
 from src.testgate.email.service import (
-    EmailService,
     aio_kafka_email_producer,
 )
-from src.testgate.database.service import get_sqlmodel_session, get_redis_client
 
 router = APIRouter(tags=["emails"])
 

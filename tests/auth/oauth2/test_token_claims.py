@@ -2,8 +2,7 @@ from datetime import datetime, timedelta
 
 
 def test_verify_with_default_attributes(payload):
-    is_payload_verified = payload.verify()
-    assert is_payload_verified is True
+    assert payload.verify() is True
 
 
 def test_verify_with_custom_attributes(payload):

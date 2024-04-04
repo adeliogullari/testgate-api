@@ -20,7 +20,7 @@ def test_retrieve_case_by_invalid_id(client: TestClient):
 
 
 def test_retrieve_case_by_query_parameters(client: TestClient, case: Case):
-    response = client.get(url=f"/api/v1/cases", params={"name": case.name})
+    response = client.get(url="/api/v1/cases", params={"name": case.name})
 
     assert response.status_code == 200
     assert response.json()[0]["id"] == case.id

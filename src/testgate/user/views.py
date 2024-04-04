@@ -33,7 +33,7 @@ from src.testgate.user.schemas import (
 )
 
 from config import Settings, get_settings
-from src.testgate.database.service import get_sqlmodel_session, get_redis_client
+from src.testgate.database.service import get_sqlmodel_session
 
 from src.testgate.auth.oauth2.token.access import AccessToken
 from src.testgate.auth.oauth2.token.refresh import RefreshToken

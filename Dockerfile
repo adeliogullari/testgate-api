@@ -1,12 +1,14 @@
-FROM python:3-alpine3.11
+FROM python:3.11.8-alpine3.19
 
-WORKDIR /code
+WORKDIR /app
 
-COPY ./requirements.txt /code/requirements.txt
+COPY . .
 
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+RUN apk add --no-cache postgresql-libs
+RUN apk add --no-cache --virtual .build-deps gcc musl-dev zlib-dev postgresql-dev
+RUN pip install --upgrade pip && pip install --no-cache-dir --upgrade -r requirements.txt
+RUN apk --purge del .build-deps
 
-COPY ./main.py /code/
-COPY ./src /code/
-COPY ./alembic /code/
+CMD ["python", "main.py"]
 
+EXPOSE 8000
