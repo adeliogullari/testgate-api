@@ -26,7 +26,12 @@ from tests.user.conftest import UserFactory
 from tests.role.conftest import RoleFactory
 from tests.permission.conftest import PermissionFactory
 from tests.repository.conftest import RepositoryFactory
-from tests.execution.conftest import ExecutionResultFactory, ExecutionFactory
+from tests.execution.conftest import (
+    ExecutionJobFactory,
+    ExecutionRunnerFactory,
+    ExecutionResultFactory,
+    ExecutionFactory,
+)
 from tests.suite.conftest import SuiteResultFactory, SuiteFactory
 from tests.case.conftest import CaseResultFactory, CaseFactory
 
@@ -40,6 +45,8 @@ register(UserFactory)
 register(RoleFactory)
 register(PermissionFactory)
 register(RepositoryFactory)
+register(ExecutionJobFactory)
+register(ExecutionRunnerFactory)
 register(ExecutionResultFactory)
 register(ExecutionFactory)
 register(SuiteResultFactory)
@@ -54,6 +61,8 @@ async def set_session_for_factory(sqlmodel_session):
     RoleFactory._meta.sqlalchemy_session = sqlmodel_session
     PermissionFactory._meta.sqlalchemy_session = sqlmodel_session
     RepositoryFactory._meta.sqlalchemy_session = sqlmodel_session
+    ExecutionJobFactory._meta.sqlalchemy_session = sqlmodel_session
+    ExecutionRunnerFactory._meta.sqlalchemy_session = sqlmodel_session
     ExecutionResultFactory._meta.sqlalchemy_session = sqlmodel_session
     ExecutionFactory._meta.sqlalchemy_session = sqlmodel_session
     SuiteResultFactory._meta.sqlalchemy_session = sqlmodel_session

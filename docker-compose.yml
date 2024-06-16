@@ -55,8 +55,6 @@ services:
     container_name: redisinsight
     image: redis/redisinsight:latest
     restart: always
-#    environment:
-#      - REDISINSIGHT_REDIS_URI=redis://secret@redis:6379
     ports:
       - '5540:5540'
     volumes:
@@ -101,49 +99,49 @@ services:
     depends_on:
       - kafka
 
-  testgate-api:
-    container_name: testgate-api
-    image: groot:latest
-    ports:
-      - '8000:8000'
-    environment:
-      - TESTGATE_UVICORN_HOST=0.0.0.0
-      - TESTGATE_UVICORN_PORT=8000
-      - TESTGATE_UVICORN_LOG_LEVEL=info
-      - TESTGATE_UVICORN_RELOAD=False
-      - TESTGATE_UVICORN_WORKERS=2
-      - TESTGATE_JWT_ACCESS_TOKEN_EXP_MINUTES=60
-      - TESTGATE_JWT_ACCESS_TOKEN_KEY=SJ6nWJtM737AZWevVdDEr4Fh0GmoyR8k
-      - TESTGATE_JWT_ACCESS_TOKEN_ALG=blake2b
-      - TESTGATE_JWT_REFRESH_TOKEN_EXP_DAYS=90
-      - TESTGATE_JWT_REFRESH_TOKEN_KEY=SJ6nWJtM737AZWevVdDEr4Fh0GmoyR8k
-      - TESTGATE_JWT_REFRESH_TOKEN_ALG=blake2b
-      - TESTGATE_POSTGRESQL_SCHEMA=postgresql
-      - TESTGATE_POSTGRESQL_USER=admin
-      - TESTGATE_POSTGRESQL_PASSWORD=secret
-      - TESTGATE_POSTGRESQL_HOST=postgres
-      - TESTGATE_POSTGRESQL_PORT=5432
-      - TESTGATE_POSTGRESQL_DATABASE=testgate_postgres
-      - TESTGATE_REDIS_ENABLED=True
-      - TESTGATE_REDIS_HOST=redis
-      - TESTGATE_REDIS_PORT=6379
-      - TESTGATE_REDIS_USERNAME=default
-      - TESTGATE_REDIS_PASSWORD=secret
-      - TESTGATE_SMTP_EMAIL_VERIFICATION=False
-      - TESTGATE_SMTP_EMAIL_HOST=smtp.gmail.com
-      - TESTGATE_SMTP_EMAIL_PORT=587
-      - TESTGATE_SMTP_EMAIL_ADDRESS=abdullahdeliogullari@gmail.com
-      - TESTGATE_SMTP_EMAIL_USERNAME=abdullahdeliogullari
-      - TESTGATE_SMTP_EMAIL_PASSWORD=smwrjwrgabjoneox
-      - TESTGATE_KAFKA_ENABLED=True
-      - TESTGATE_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
+#  testgate-api:
+#    container_name: testgate-api
+#    image: groot:latest
+#    ports:
+#      - '8000:8000'
+#    environment:
+#      - TESTGATE_UVICORN_HOST=0.0.0.0
+#      - TESTGATE_UVICORN_PORT=8000
+#      - TESTGATE_UVICORN_LOG_LEVEL=info
+#      - TESTGATE_UVICORN_RELOAD=False
+#      - TESTGATE_UVICORN_WORKERS=2
+#      - TESTGATE_JWT_ACCESS_TOKEN_EXP_MINUTES=60
+#      - TESTGATE_JWT_ACCESS_TOKEN_KEY=SJ6nWJtM737AZWevVdDEr4Fh0GmoyR8k
+#      - TESTGATE_JWT_ACCESS_TOKEN_ALG=blake2b
+#      - TESTGATE_JWT_REFRESH_TOKEN_EXP_DAYS=90
+#      - TESTGATE_JWT_REFRESH_TOKEN_KEY=SJ6nWJtM737AZWevVdDEr4Fh0GmoyR8k
+#      - TESTGATE_JWT_REFRESH_TOKEN_ALG=blake2b
+#      - TESTGATE_POSTGRESQL_SCHEMA=postgresql
+#      - TESTGATE_POSTGRESQL_USER=admin
+#      - TESTGATE_POSTGRESQL_PASSWORD=secret
+#      - TESTGATE_POSTGRESQL_HOST=postgres
+#      - TESTGATE_POSTGRESQL_PORT=5432
+#      - TESTGATE_POSTGRESQL_DATABASE=testgate_postgres
+#      - TESTGATE_REDIS_ENABLED=True
+#      - TESTGATE_REDIS_HOST=redis
+#      - TESTGATE_REDIS_PORT=6379
+#      - TESTGATE_REDIS_USERNAME=default
+#      - TESTGATE_REDIS_PASSWORD=secret
+#      - TESTGATE_SMTP_EMAIL_VERIFICATION=False
+#      - TESTGATE_SMTP_EMAIL_HOST=smtp.gmail.com
+#      - TESTGATE_SMTP_EMAIL_PORT=587
+#      - TESTGATE_SMTP_EMAIL_ADDRESS=abdullahdeliogullari@gmail.com
+#      - TESTGATE_SMTP_EMAIL_USERNAME=abdullahdeliogullari
+#      - TESTGATE_SMTP_EMAIL_PASSWORD=smwrjwrgabjoneox
+#      - TESTGATE_KAFKA_ENABLED=True
+#      - TESTGATE_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      redis:
+#        condition: service_healthy
+#      kafka:
+#        condition: service_healthy
 
 volumes:
   postgres_data:

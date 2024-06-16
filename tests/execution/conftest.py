@@ -1,11 +1,36 @@
 import factory
 from factory.faker import Faker
-from src.testgate.execution.models import Execution, ExecutionResult
+from src.testgate.execution.models import (
+    Execution,
+    ExecutionJob,
+    ExecutionRunner,
+    ExecutionResult,
+)
 from factory.alchemy import SQLAlchemyModelFactory
 from src.testgate.auth.crypto.password.library import PasswordHashLibrary
 from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy
 
 password_hash_library = PasswordHashLibrary(ScryptPasswordHashStrategy())
+
+
+class ExecutionJobFactory(SQLAlchemyModelFactory):
+    class Meta:
+        model = ExecutionJob
+        sqlalchemy_session = None
+        sqlalchemy_session_persistence = "flush"
+
+    id = 1
+    name = Faker("name")
+
+
+class ExecutionRunnerFactory(SQLAlchemyModelFactory):
+    class Meta:
+        model = ExecutionRunner
+        sqlalchemy_session = None
+        sqlalchemy_session_persistence = "flush"
+
+    id = 1
+    name = Faker("name")
 
 
 class ExecutionResultFactory(SQLAlchemyModelFactory):
@@ -30,8 +55,14 @@ class ExecutionFactory(SQLAlchemyModelFactory):
     id = 1
     name = Faker("name")
     result = factory.SubFactory(ExecutionResultFactory)
+    runner = factory.SubFactory(ExecutionRunnerFactory)
 
     @factory.post_generation
     def result_generation(self, create, extracted, **kwargs):
         if not create:
             self.result = self.result.__dict__
+
+    @factory.post_generation
+    def runner_generation(self, create, extracted, **kwargs):
+        if not create:
+            self.runner = self.runner.__dict__

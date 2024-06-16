@@ -42,7 +42,7 @@ class RegisteredClaims:
         return self.aud == aud
 
     def _verify_exp(self, now: float) -> bool:
-        return now <= self.exp
+        return now < self.exp
 
     def _verify_nbf(self, now: float) -> bool:
         return self.nbf < now
@@ -54,6 +54,7 @@ class RegisteredClaims:
         self, iss: str | None = None, sub: str | None = None, aud: str | None = None
     ) -> bool:
         now = datetime.utcnow().timestamp()
+        print("mehmet")
         verified_iss = self._verify_iss(iss=iss)
         print(verified_iss)
         verified_sub = self._verify_sub(sub=sub)

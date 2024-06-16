@@ -23,3 +23,10 @@ docker build -t groot .
 docker tag groot:latest groot:staging
 
 Bug in claims verify, you should check
+Still one function need in token abstract, check that
+Cache are not good, check especially update
+Check models 1 more time
+Permissions
+Documentation
+
+execution --> retrieve_by_name --> Name unique ??

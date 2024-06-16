@@ -9,7 +9,7 @@ INVALID_USER_ID = random.randint(1, 1000)
 
 invalid_headers = {"Authorization": f"bearer {INVALID_ACCESS_TOKEN}"}
 
-password_pash_library = PasswordHashLibrary(ScryptPasswordHashStrategy())
+password_hash_library = PasswordHashLibrary(ScryptPasswordHashStrategy())
 
 
 async def test_retrieve_current_user(client, user, headers):
@@ -128,7 +128,7 @@ async def test_verify_current_user_with_invalid_token(client):
 
 
 @pytest.mark.parametrize(
-    "user__password", [password_pash_library.encode("password_2024")]
+    "user__password", [password_hash_library.encode("password_2024")]
 )
 async def test_update_current_user_password(client, user, headers):
     response = client.put(

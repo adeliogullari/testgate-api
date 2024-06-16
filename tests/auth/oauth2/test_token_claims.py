@@ -20,9 +20,9 @@ def test_verify_with_custom_attributes(payload):
 
 def test_verify_with_exceed_expiration(payload):
     now = datetime.utcnow()
-    exp = (now + timedelta(seconds=0)).timestamp()
-    nbf = (now - timedelta(seconds=0)).timestamp()
-    iat = (now - timedelta(seconds=0)).timestamp()
+    exp = (now - timedelta(seconds=7200)).timestamp()
+    nbf = (now + timedelta(seconds=60)).timestamp()
+    iat = (now + timedelta(seconds=60)).timestamp()
 
     payload.exp = exp
     payload.nbf = nbf

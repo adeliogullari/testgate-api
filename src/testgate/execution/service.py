@@ -48,16 +48,6 @@ async def retrieve_by_id(
     return retrieved_execution
 
 
-async def retrieve_by_name(*, sqlmodel_session: Session, name: str) -> Execution | None:
-    """Return an execution object based on the given name."""
-
-    statement: Any = select(Execution).where(Execution.name == name)
-
-    retrieved_execution = sqlmodel_session.exec(statement).one_or_none()
-
-    return retrieved_execution
-
-
 async def retrieve_by_query_parameters(
     *, sqlmodel_session: Session, query_parameters: ExecutionQueryParameters
 ) -> Sequence[Execution] | None:
@@ -68,9 +58,10 @@ async def retrieve_by_query_parameters(
 
     statement: Any = select(Execution).offset(offset).limit(limit)
 
-    for attr, value in query_parameters.model_dump(exclude={"offset", "limit"}).items():
-        if value:
-            statement = statement.filter(getattr(Execution, attr) == value)
+    for attr, value in query_parameters.model_dump(
+        exclude={"offset", "limit"}, exclude_none=True
+    ).items():
+        statement = statement.filter(getattr(Execution, attr) == value)
 
     retrieved_executions = sqlmodel_session.exec(statement).all()
 

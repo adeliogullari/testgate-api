@@ -91,21 +91,6 @@ async def test_update(
 
 
 async def test_delete(sqlmodel_session: Session, redis_client: Redis, case: Case):
-    deleted_case = await delete(
-        sqlmodel_session=sqlmodel_session,
-        redis_client=redis_client,
-        retrieved_case=case,
-    )
-
-    cached_case = await redis_client.get(name=f"case_{case.id}")
-
-    assert cached_case is None
-    assert deleted_case.id == case.id
-
-
-async def test_delete_with_cache(
-    sqlmodel_session: Session, redis_client: Redis, case: Case
-):
     await redis_client.set(name=f"case_{case.id}", value=case.model_dump_json())
 
     deleted_case = await delete(

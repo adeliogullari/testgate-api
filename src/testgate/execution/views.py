@@ -2,7 +2,7 @@ from typing import List
 from sqlmodel import Session
 from fastapi import Query, Depends, APIRouter
 from redis.asyncio.client import Redis
-from .exceptions import ExecutionNotFoundException, ExecutionAlreadyExistsException
+from .exceptions import ExecutionNotFoundException
 from .models import Execution
 from .schemas import (
     RetrieveExecutionResponse,
@@ -77,13 +77,6 @@ async def create_execution(
     execution: CreateExecutionRequest,
 ) -> Execution | None:
     """Creates execution."""
-
-    retrieved_execution = await execution_service.retrieve_by_name(
-        sqlmodel_session=sqlmodel_session, name=execution.name
-    )
-
-    if retrieved_execution:
-        raise ExecutionAlreadyExistsException
 
     created_execution = await execution_service.create(
         sqlmodel_session=sqlmodel_session,
