@@ -1,3 +1,4 @@
+from typing import Any
 from sqlmodel import SQLModel
 from src.testgate.execution.models import ExecutionResult
 
@@ -5,7 +6,7 @@ from src.testgate.execution.models import ExecutionResult
 class RetrieveExecutionResponse(SQLModel):
     id: int
     name: str
-    # result: ExecutionResult
+    result: Any
 
 
 class ExecutionQueryParameters(SQLModel):

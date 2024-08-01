@@ -4,9 +4,7 @@ from .models import Suite, SuiteResult
 from .schemas import CreateSuiteRequestModel, UpdateSuiteRequestModel
 
 
-async def create(
-    *, sqlmodel_session: Session, suite: CreateSuiteRequestModel
-) -> Suite | None:
+async def create(*, sqlmodel_session: Session, suite: CreateSuiteRequestModel) -> Suite:
     """Creates a new suite object."""
 
     created_suite = Suite()
@@ -21,7 +19,7 @@ async def create(
     return created_suite
 
 
-async def retrieve_by_id(*, sqlmodel_session: Session, id: int) -> Suite | None:
+async def retrieve_by_id(*, sqlmodel_session: Session, id: int) -> Suite:
     """Returns a suite object based on the given id."""
 
     statement: Any = select(Suite).where(Suite.id == id)
@@ -31,7 +29,7 @@ async def retrieve_by_id(*, sqlmodel_session: Session, id: int) -> Suite | None:
     return retrieved_suite
 
 
-async def retrieve_by_name(*, sqlmodel_session: Session, name: str) -> Suite | None:
+async def retrieve_by_name(*, sqlmodel_session: Session, name: str) -> Suite:
     """Return a suite object based on the given name."""
 
     statement: Any = select(Suite).where(Suite.name == name)
@@ -43,7 +41,7 @@ async def retrieve_by_name(*, sqlmodel_session: Session, name: str) -> Suite | N
 
 async def update(
     *, sqlmodel_session: Session, retrieved_suite: Suite, suite: UpdateSuiteRequestModel
-) -> Suite | None:
+) -> Suite:
     """Updates an existing suite object."""
 
     retrieved_suite.name = suite.name
@@ -56,7 +54,7 @@ async def update(
     return updated_suite
 
 
-async def delete(*, sqlmodel_session: Session, retrieved_suite: Suite) -> Suite | None:
+async def delete(*, sqlmodel_session: Session, retrieved_suite: Suite) -> Suite:
     """Deletes an existing suite object."""
 
     sqlmodel_session.delete(retrieved_suite)

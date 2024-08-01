@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Sequence
 
 from sqlmodel import Session
 from redis.asyncio import Redis
@@ -21,7 +21,8 @@ from .schemas import (
     DeleteCaseResponseModel,
 )
 from .models import Case
-from src.testgate.database.service import get_sqlmodel_session, get_redis_client
+from src.testgate.database.service import get_sqlmodel_session
+from src.testgate.cache.service import get_redis_client
 
 router = APIRouter(tags=["cases"])
 
@@ -79,7 +80,7 @@ async def retrieve_case_by_query_parameters(
     offset: int = Query(default=0),
     limit: int = Query(default=100, lte=100),
     name: str = Query(default=None),
-) -> list[Case] | None:
+) -> Sequence[Case] | None:
     """Search case by name."""
 
     query_parameters = CaseQueryParameters(offset=offset, limit=limit, name=name)

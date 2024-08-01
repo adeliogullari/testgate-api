@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Sequence
 from sqlmodel import Session
 from redis.asyncio.client import Redis
 from fastapi import Query, Depends, APIRouter
@@ -21,7 +21,8 @@ from .service import (
     update,
     delete,
 )
-from src.testgate.database.service import get_sqlmodel_session, get_redis_client
+from src.testgate.database.service import get_sqlmodel_session
+from src.testgate.cache.service import get_redis_client
 
 router = APIRouter(tags=["permissions"])
 
@@ -62,7 +63,7 @@ async def retrieve_permission_by_query_parameters(
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
     name: str = Query(default=None),
-) -> list[Permission] | None:
+) -> Sequence[Permission] | None:
     """Search permission by name."""
 
     query_parameters = PermissionQueryParameters(offset=offset, limit=limit, name=name)
@@ -138,7 +139,7 @@ async def update_permission(
 async def delete_permission(
     *,
     sqlmodel_session: Session = Depends(get_sqlmodel_session),
-    redis_client=Depends(get_redis_client),
+    redis_client: Redis = Depends(get_redis_client),
     permission_id: int,
 ) -> Permission | None:
     """Deletes permission."""

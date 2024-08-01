@@ -2,6 +2,7 @@ import json
 from sqlmodel import Session
 from redis.asyncio.client import Redis
 from src.testgate.repository.models import Repository
+from tests.repository.conftest import RepositoryFactory
 from src.testgate.repository.service import (
     create,
     retrieve_by_id,
@@ -19,8 +20,10 @@ from src.testgate.repository.schemas import (
 
 
 async def test_create(
-    sqlmodel_session: Session, redis_client: Redis, repository_factory
-):
+    sqlmodel_session: Session,
+    redis_client: Redis,
+    repository_factory: RepositoryFactory,
+) -> None:
     repository = CreateRepositoryRequest(**repository_factory.stub().__dict__)
 
     created_repository = await create(
@@ -38,8 +41,8 @@ async def test_create(
 
 
 async def test_retrieve_by_id(
-    sqlmodel_session: Session, redis_client: Redis, repository
-):
+    sqlmodel_session: Session, redis_client: Redis, repository: Repository
+) -> None:
     retrieved_repository = await retrieve_by_id(
         sqlmodel_session=sqlmodel_session,
         redis_client=redis_client,
@@ -54,7 +57,9 @@ async def test_retrieve_by_id(
     assert retrieved_repository.id == repository.id
 
 
-async def test_retrieve_by_name(sqlmodel_session: Session, repository):
+async def test_retrieve_by_name(
+    sqlmodel_session: Session, repository: Repository
+) -> None:
     retrieved_repository = await retrieve_by_name(
         sqlmodel_session=sqlmodel_session, repository_name=repository.name
     )
@@ -62,7 +67,9 @@ async def test_retrieve_by_name(sqlmodel_session: Session, repository):
     assert retrieved_repository.name == repository.name
 
 
-async def test_retrieve_by_query_parameters(sqlmodel_session: Session, repository):
+async def test_retrieve_by_query_parameters(
+    sqlmodel_session: Session, repository: Repository
+) -> None:
     query_parameters = RepositoryQueryParameters(
         offset=0, limit=1, name=repository.name
     )
@@ -75,8 +82,11 @@ async def test_retrieve_by_query_parameters(sqlmodel_session: Session, repositor
 
 
 async def test_update(
-    sqlmodel_session: Session, redis_client: Redis, repository_factory, repository
-):
+    sqlmodel_session: Session,
+    redis_client: Redis,
+    repository_factory: RepositoryFactory,
+    repository: Repository,
+) -> None:
     update_repository = UpdateRepositoryRequest(**repository_factory.stub().__dict__)
 
     updated_repository = await update(
@@ -94,7 +104,9 @@ async def test_update(
     assert updated_repository.id == repository.id
 
 
-async def test_delete(sqlmodel_session: Session, redis_client: Redis, repository):
+async def test_delete(
+    sqlmodel_session: Session, redis_client: Redis, repository: Repository
+) -> None:
     deleted_repository = await delete(
         sqlmodel_session=sqlmodel_session,
         redis_client=redis_client,
@@ -109,7 +121,7 @@ async def test_delete(sqlmodel_session: Session, redis_client: Redis, repository
 
 async def test_delete_with_cache(
     sqlmodel_session: Session, redis_client: Redis, repository: Repository
-):
+) -> None:
     await redis_client.set(
         name=f"repository_{repository.id}", value=repository.model_dump_json()
     )

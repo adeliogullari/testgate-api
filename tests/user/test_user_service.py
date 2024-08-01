@@ -1,7 +1,7 @@
 from sqlmodel import Session
 from src.testgate.auth.crypto.password.library import PasswordHashLibrary
-from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy
 from src.testgate.user.models import User
+from tests.user.conftest import UserFactory
 from src.testgate.user.schemas import (
     UserQueryParametersModel,
     CreateUserRequestModel,
@@ -19,10 +19,10 @@ from src.testgate.user.service import (
     delete,
 )
 
-password_pash_library = PasswordHashLibrary(ScryptPasswordHashStrategy())
+password_pash_library = PasswordHashLibrary(algorithm="scrypt")
 
 
-async def test_retrieve_by_id(sqlmodel_session: Session, user: User):
+async def test_retrieve_by_id(sqlmodel_session: Session, user: User) -> None:
     retrieved_user = await retrieve_by_id(
         sqlmodel_session=sqlmodel_session, user_id=user.id
     )
@@ -30,7 +30,7 @@ async def test_retrieve_by_id(sqlmodel_session: Session, user: User):
     assert retrieved_user.id == user.id
 
 
-async def test_retrieve_by_username(sqlmodel_session: Session, user: User):
+async def test_retrieve_by_username(sqlmodel_session: Session, user: User) -> None:
     retrieved_user = await retrieve_by_username(
         sqlmodel_session=sqlmodel_session, user_username=user.username
     )
@@ -38,7 +38,7 @@ async def test_retrieve_by_username(sqlmodel_session: Session, user: User):
     assert retrieved_user.username == user.username
 
 
-async def test_retrieve_by_email(sqlmodel_session: Session, user: User):
+async def test_retrieve_by_email(sqlmodel_session: Session, user: User) -> None:
     retrieved_user = await retrieve_by_email(
         sqlmodel_session=sqlmodel_session, user_email=user.email
     )
@@ -46,7 +46,9 @@ async def test_retrieve_by_email(sqlmodel_session: Session, user: User):
     assert retrieved_user.email == user.email
 
 
-async def test_retrieve_by_query_parameters(sqlmodel_session: Session, user: User):
+async def test_retrieve_by_query_parameters(
+    sqlmodel_session: Session, user: User
+) -> None:
     query_parameters = UserQueryParametersModel(
         offset=0,
         limit=1,
@@ -64,7 +66,7 @@ async def test_retrieve_by_query_parameters(sqlmodel_session: Session, user: Use
     assert retrieved_users[0].id == user.id
 
 
-async def test_create(sqlmodel_session: Session, user_factory):
+async def test_create(sqlmodel_session: Session, user_factory: UserFactory) -> None:
     user = CreateUserRequestModel(
         **user_factory.stub(password="password_2024").__dict__
     )
@@ -74,7 +76,9 @@ async def test_create(sqlmodel_session: Session, user_factory):
     assert created_user.email == user.email
 
 
-async def test_update(sqlmodel_session: Session, user_factory, user: User):
+async def test_update(
+    sqlmodel_session: Session, user_factory: UserFactory, user: User
+) -> None:
     update_user = UpdateUserRequestModel(
         **user_factory.stub(password="password_2024").__dict__
     )
@@ -86,7 +90,9 @@ async def test_update(sqlmodel_session: Session, user_factory, user: User):
     assert updated_user.id == user.id
 
 
-async def test_update_password(sqlmodel_session: Session, user_factory, user: User):
+async def test_update_password(
+    sqlmodel_session: Session, user_factory: UserFactory, user: User
+) -> None:
     retrieved_user = user_factory.stub(
         password=password_pash_library.encode("password_2024")
     )
@@ -100,13 +106,13 @@ async def test_update_password(sqlmodel_session: Session, user_factory, user: Us
     assert updated_user.password == user.password
 
 
-async def test_verify(sqlmodel_session: Session, user):
+async def test_verify(sqlmodel_session: Session, user: User) -> None:
     verified_user = await verify(sqlmodel_session=sqlmodel_session, retrieved_user=user)
 
     assert verified_user.verified is True
 
 
-async def test_delete(sqlmodel_session: Session, user: User):
+async def test_delete(sqlmodel_session: Session, user: User) -> None:
     deleted_user = await delete(sqlmodel_session=sqlmodel_session, retrieved_user=user)
 
     assert deleted_user.id == user.id

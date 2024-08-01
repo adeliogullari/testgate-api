@@ -1,3 +1,5 @@
+from src.testgate.permission.models import Permission
+from tests.permission.conftest import PermissionFactory
 from src.testgate.permission.service import (
     create,
     retrieve_by_id,
@@ -16,7 +18,9 @@ from sqlmodel import Session
 from redis.asyncio.client import Redis
 
 
-async def test_create(sqlmodel_session: Session, permission_factory):
+async def test_create(
+    sqlmodel_session: Session, permission_factory: PermissionFactory
+) -> None:
     permission = CreatePermissionRequest(**permission_factory.stub().__dict__)
 
     created_permission = await create(
@@ -27,8 +31,8 @@ async def test_create(sqlmodel_session: Session, permission_factory):
 
 
 async def test_retrieve_by_id(
-    sqlmodel_session: Session, redis_client: Redis, permission
-):
+    sqlmodel_session: Session, redis_client: Redis, permission: Permission
+) -> None:
     retrieved_permission = await retrieve_by_id(
         sqlmodel_session=sqlmodel_session,
         redis_client=redis_client,
@@ -38,7 +42,9 @@ async def test_retrieve_by_id(
     assert retrieved_permission.id == permission.id
 
 
-async def test_retrieve_by_name(sqlmodel_session: Session, permission):
+async def test_retrieve_by_name(
+    sqlmodel_session: Session, permission: Permission
+) -> None:
     retrieved_permission = await retrieve_by_name(
         sqlmodel_session=sqlmodel_session, permission_name=permission.name
     )
@@ -46,7 +52,9 @@ async def test_retrieve_by_name(sqlmodel_session: Session, permission):
     assert retrieved_permission.name == permission.name
 
 
-async def test_retrieve_by_query_parameters(sqlmodel_session: Session, permission):
+async def test_retrieve_by_query_parameters(
+    sqlmodel_session: Session, permission: Permission
+) -> None:
     query_parameters = PermissionQueryParameters(
         offset=0, limit=1, name=permission.name
     )
@@ -58,7 +66,11 @@ async def test_retrieve_by_query_parameters(sqlmodel_session: Session, permissio
     assert retrieved_permission[0].id == permission.id
 
 
-async def test_update(sqlmodel_session: Session, permission_factory, permission):
+async def test_update(
+    sqlmodel_session: Session,
+    permission_factory: PermissionFactory,
+    permission: Permission,
+) -> None:
     update_permission = UpdatePermissionRequest(**permission_factory.stub().__dict__)
 
     updated_permission = await update(
@@ -70,7 +82,7 @@ async def test_update(sqlmodel_session: Session, permission_factory, permission)
     assert updated_permission.id == permission.id
 
 
-async def test_delete(sqlmodel_session: Session, permission):
+async def test_delete(sqlmodel_session: Session, permission: Permission) -> None:
     deleted_permission = await delete(
         sqlmodel_session=sqlmodel_session, retrieved_permission=permission
     )

@@ -20,7 +20,8 @@ from .schemas import (
     UpdateRoleResponseModel,
     DeleteRoleResponseModel,
 )
-from src.testgate.database.service import get_sqlmodel_session, get_redis_client
+from src.testgate.database.service import get_sqlmodel_session
+from src.testgate.cache.service import get_redis_client
 
 router = APIRouter(tags=["roles"])
 
@@ -41,7 +42,7 @@ RoleAlreadyExistsException = HTTPException(
 async def retrieve_role_by_id(
     *,
     sqlmodel_session: Session = Depends(get_sqlmodel_session),
-    redis_client=Depends(get_redis_client),
+    redis_client: Redis = Depends(get_redis_client),
     role_id: int,
 ) -> Role | None:
     """Retrieve role by id."""

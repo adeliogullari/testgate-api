@@ -19,7 +19,7 @@ from src.testgate.case.service import (
 
 async def test_create(
     sqlmodel_session: Session, redis_client: Redis, case_factory: CaseFactory
-):
+) -> None:
     case = CreateCaseRequestModel(**case_factory.stub().__dict__)
 
     created_case = await create(
@@ -36,7 +36,7 @@ async def test_create(
 
 async def test_retrieve_by_id(
     sqlmodel_session: Session, redis_client: Redis, case: Case
-):
+) -> None:
     retrieved_case = await retrieve_by_id(
         sqlmodel_session=sqlmodel_session, redis_client=redis_client, case_id=case.id
     )
@@ -47,9 +47,9 @@ async def test_retrieve_by_id(
     assert retrieved_case.id == case.id
 
 
-async def test_retrieve_by_cache(
+async def test_retrieve_cache_by_id(
     sqlmodel_session: Session, redis_client: Redis, case: Case
-):
+) -> None:
     await redis_client.set(name=f"case_{case.id}", value=case.model_dump_json())
 
     retrieved_case = await retrieve_by_id(
@@ -59,7 +59,9 @@ async def test_retrieve_by_cache(
     assert retrieved_case.id == case.id
 
 
-async def test_retrieve_by_query_parameters(sqlmodel_session: Session, case: Case):
+async def test_retrieve_by_query_parameters(
+    sqlmodel_session: Session, case: Case
+) -> None:
     query_parameters = CaseQueryParameters(offset=0, limit=1, name=case.name)
 
     retrieved_cases = await retrieve_by_query_parameters(
@@ -74,7 +76,7 @@ async def test_update(
     redis_client: Redis,
     case_factory: CaseFactory,
     case: Case,
-):
+) -> None:
     update_case = UpdateCaseRequestModel(**case_factory.stub().__dict__)
 
     updated_case = await update(
@@ -90,7 +92,9 @@ async def test_update(
     assert updated_case.id == case.id
 
 
-async def test_delete(sqlmodel_session: Session, redis_client: Redis, case: Case):
+async def test_delete(
+    sqlmodel_session: Session, redis_client: Redis, case: Case
+) -> None:
     await redis_client.set(name=f"case_{case.id}", value=case.model_dump_json())
 
     deleted_case = await delete(

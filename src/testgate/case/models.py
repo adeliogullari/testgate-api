@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from sqlmodel import SQLModel, Field, Relationship
 
 if TYPE_CHECKING:
@@ -28,7 +28,7 @@ class CaseResult(SQLModel, table=True):
 class Case(SQLModel, table=True):
     __tablename__ = "case"
 
-    id: Optional[int] = Field(primary_key=True)
+    id: int = Field(primary_key=True)
     name: str = Field(default=None)
     description: str = Field(default=None)
     suite_id: int | None = Field(default=None, foreign_key="suite.id")

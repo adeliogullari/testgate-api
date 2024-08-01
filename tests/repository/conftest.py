@@ -2,9 +2,8 @@ from factory.faker import Faker
 from src.testgate.repository.models import Repository
 from factory.alchemy import SQLAlchemyModelFactory
 from src.testgate.auth.crypto.password.library import PasswordHashLibrary
-from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy
 
-password_hash_library = PasswordHashLibrary(ScryptPasswordHashStrategy())
+password_hash_library = PasswordHashLibrary(algorithm="scrypt")
 
 
 class RepositoryFactory(SQLAlchemyModelFactory):

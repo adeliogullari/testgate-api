@@ -1,6 +1,6 @@
 import pytest
 from pytest_factoryboy import register
-from typing import Any, Generator, AsyncGenerator
+from typing import Any, AsyncGenerator
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from redis.asyncio import Redis
@@ -17,10 +17,8 @@ from src.testgate.execution.views import router as execution_router
 from src.testgate.suite.views import router as suite_router
 
 from src.testgate.case.views import router as case_router
-from src.testgate.database.service import (
-    get_redis_client,
-    get_sqlmodel_session,
-)
+from src.testgate.database.service import get_sqlmodel_session
+from src.testgate.cache.service import get_redis_client
 
 from tests.user.conftest import UserFactory
 from tests.role.conftest import RoleFactory
@@ -56,7 +54,7 @@ register(CaseFactory)
 
 
 @pytest.fixture(autouse=True)
-async def set_session_for_factory(sqlmodel_session):
+async def set_session_for_factory(sqlmodel_session: Session) -> None:
     UserFactory._meta.sqlalchemy_session = sqlmodel_session
     RoleFactory._meta.sqlalchemy_session = sqlmodel_session
     PermissionFactory._meta.sqlalchemy_session = sqlmodel_session
@@ -85,7 +83,7 @@ async def start_application() -> FastAPI | None:
 
 
 @pytest.fixture
-async def app() -> AsyncGenerator[FastAPI, Any]:
+async def app() -> AsyncGenerator[FastAPI, Any] | None:
     SQLModel.metadata.create_all(bind=engine)
     _app = await start_application()
     yield _app
@@ -114,18 +112,18 @@ async def redis_client(app: FastAPI) -> AsyncGenerator[Redis, Any]:
 async def client(
     app: FastAPI, sqlmodel_session: Session, redis_client: Redis
 ) -> AsyncGenerator[TestClient, Any]:
-    def _get_sqlmodel_session() -> Generator[Session, Any, Any]:
+    async def _get_sqlmodel_session() -> AsyncGenerator[Session, Any]:
         yield sqlmodel_session
 
     async def _get_redis_client() -> AsyncGenerator[Redis, Any]:
         await redis_client.flushdb()
         yield redis_client
 
-    def _get_settings():
-        return Settings(
-            testgate_jwt_access_token_exp_minutes="60",
+    async def _get_settings() -> AsyncGenerator[Settings, Any]:
+        yield Settings(
+            testgate_jwt_access_token_expiration_minutes=60,
             testgate_jwt_access_token_key="SJ6nWJtM737AZWevVdDEr4Fh0GmoyR8k",
-            testgate_jwt_refresh_token_exp_days="90",
+            testgate_jwt_refresh_token_expiration_days=90,
             testgate_jwt_refresh_token_key="SJ6nWJtM737AZWevVdDEr4Fh0GmoyR8k",
             testgate_smtp_email_verification=False,
         )

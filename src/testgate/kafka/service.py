@@ -6,19 +6,19 @@ from aiokafka import AIOKafkaProducer, AIOKafkaConsumer
 settings = Settings()
 
 
-def key_serializer(key: Any):
+def key_serializer(key: Any) -> bytes:
     return json.dumps(key).encode(encoding="utf-8")
 
 
-def value_serializer(value: Any):
+def value_serializer(value: Any) -> bytes:
     return json.dumps(value).encode(encoding="utf-8")
 
 
-def key_deserializer(key: str | bytes | bytearray):
-    return json.loads(key).decode(encoding="utf-8")
+def key_deserializer(key: str | bytes | bytearray) -> Any:
+    return json.loads(key)
 
 
-def value_deserializer(value: str | bytes | bytearray):
+def value_deserializer(value: str | bytes | bytearray) -> Any:
     return json.loads(value)
 
 

@@ -4,7 +4,7 @@ from src.testgate.auth.schemas import RegisterCredentials
 from tests.user.conftest import UserFactory
 
 
-async def test_register(sqlmodel_session: Session, user_factory: UserFactory):
+async def test_register(sqlmodel_session: Session, user_factory: UserFactory) -> None:
     credentials = RegisterCredentials(
         **user_factory.stub(password="password_2024").__dict__
     )

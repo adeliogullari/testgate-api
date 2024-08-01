@@ -11,6 +11,6 @@ router = APIRouter(tags=["emails"])
 async def send_email(
     *,
     email: SendEmailModel,
-):
+) -> SendEmailModel | None:
     await aio_kafka_email_producer(value=email.model_dump())
     return email

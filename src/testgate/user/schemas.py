@@ -6,10 +6,9 @@ from src.testgate.role.models import Role
 from src.testgate.repository.models import Repository
 
 from src.testgate.auth.crypto.password.library import PasswordHashLibrary
-from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy
 from src.testgate.user.exceptions import InvalidPasswordConfirmationException
 
-password_hash_library = PasswordHashLibrary(ScryptPasswordHashStrategy())
+password_hash_library = PasswordHashLibrary(algorithm="scrypt")
 
 
 class UserRequestModel(SQLModel):

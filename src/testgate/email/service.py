@@ -22,7 +22,7 @@ class EmailService:
         self._mime_message = value
 
     @property
-    def smtp_server(self) -> SMTP | None:
+    def smtp_server(self) -> SMTP:
         return self._smtp_server
 
     @smtp_server.setter
@@ -60,7 +60,7 @@ async def aio_kafka_email_producer(value: Any) -> None:
         await producer.stop()
 
 
-async def aio_kafka_email_consumer():
+async def aio_kafka_email_consumer() -> None:
     consumer = await aio_kafka_consumer()
     consumer.subscribe(topics=["email"])
 

@@ -1,11 +1,9 @@
 import pytest
-from src.testgate.auth.crypto.digest.strategy import Blake2bMessageDigestStrategy
+from src.testgate.auth.oauth2.token.refresh import RefreshToken
 
 
-@pytest.mark.parametrize(
-    "refresh_token", [Blake2bMessageDigestStrategy()], indirect=True
-)
-def test_encode_with_valid_payload_and_key(refresh_token):
+@pytest.mark.parametrize("refresh_token", ["blake2b"], indirect=True)
+def test_encode_with_valid_payload_and_key(refresh_token: RefreshToken) -> None:
     token = refresh_token.encode(
         payload={"email": "username@testgate.com"},
         key="key",
@@ -14,10 +12,8 @@ def test_encode_with_valid_payload_and_key(refresh_token):
     assert token is not None
 
 
-@pytest.mark.parametrize(
-    "refresh_token", [Blake2bMessageDigestStrategy()], indirect=True
-)
-def test_decode_with_valid_payload_and_key(refresh_token):
+@pytest.mark.parametrize("refresh_token", ["blake2b"], indirect=True)
+def test_decode_with_valid_payload_and_key(refresh_token: RefreshToken) -> None:
     token = refresh_token.encode(
         payload={"email": "username@testgate.com"},
         key="key",
@@ -31,10 +27,8 @@ def test_decode_with_valid_payload_and_key(refresh_token):
     assert signature is not None
 
 
-@pytest.mark.parametrize(
-    "refresh_token", [Blake2bMessageDigestStrategy()], indirect=True
-)
-def test_verify_with_valid_token_and_key(refresh_token):
+@pytest.mark.parametrize("refresh_token", ["blake2b"], indirect=True)
+def test_verify_with_valid_token_and_key(refresh_token: RefreshToken) -> None:
     token = refresh_token.encode(
         payload={"email": "username@testgate.com"},
         key="key",
@@ -46,10 +40,8 @@ def test_verify_with_valid_token_and_key(refresh_token):
     assert is_token_verified is True
 
 
-@pytest.mark.parametrize(
-    "refresh_token", [Blake2bMessageDigestStrategy()], indirect=True
-)
-def test_verify_with_invalid_key(refresh_token):
+@pytest.mark.parametrize("refresh_token", ["blake2b"], indirect=True)
+def test_verify_with_invalid_key(refresh_token: RefreshToken) -> None:
     token = refresh_token.encode(
         payload={"email": "username@testgate.com"},
         key="key",
@@ -61,10 +53,10 @@ def test_verify_with_invalid_key(refresh_token):
     assert is_token_verified is False
 
 
-@pytest.mark.parametrize(
-    "refresh_token", [Blake2bMessageDigestStrategy()], indirect=True
-)
-def test_verify_and_decode_with_valid_token_and_key(refresh_token):
+@pytest.mark.parametrize("refresh_token", ["blake2b"], indirect=True)
+def test_verify_and_decode_with_valid_token_and_key(
+    refresh_token: RefreshToken,
+) -> None:
     token = refresh_token.encode(
         payload={"email": "username@testgate.com"},
         key="key",

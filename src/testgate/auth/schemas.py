@@ -4,15 +4,15 @@ from pydantic import field_validator, Field, ValidationInfo, EmailStr
 
 from config import Settings
 from src.testgate.auth.crypto.password.library import PasswordHashLibrary
-from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy
 from src.testgate.auth.oauth2.token.access import AccessToken
 from src.testgate.auth.oauth2.token.refresh import RefreshToken
-from src.testgate.auth.crypto.digest.strategy import Blake2bMessageDigestStrategy
 
 settings = Settings()
-access_token = AccessToken(Blake2bMessageDigestStrategy())
-refresh_token = RefreshToken(Blake2bMessageDigestStrategy())
-password_hash_library = PasswordHashLibrary(ScryptPasswordHashStrategy())
+access_token = AccessToken(algorithm=settings.testgate_jwt_access_token_algorithm)
+refresh_token = RefreshToken(algorithm=settings.testgate_jwt_refresh_token_algorithm)
+password_hash_library = PasswordHashLibrary(
+    algorithm=settings.testgate_password_hash_algorithm
+)
 
 
 class LoginCredentials(SQLModel):
@@ -29,26 +29,33 @@ class LoginResponse(SQLModel):
     def generate_access_token(cls, val: str, info: ValidationInfo) -> str:
         now = datetime.utcnow()
         exp = (
-            now + timedelta(minutes=settings.testgate_jwt_access_token_exp_minutes)
+            now
+            + timedelta(minutes=settings.testgate_jwt_access_token_expiration_minutes)
         ).timestamp()
         payload = {"exp": exp, "email": info.data["email"]}
         return access_token.encode(
             payload=payload,
             key=settings.testgate_jwt_access_token_key,
-            headers={"alg": settings.testgate_jwt_access_token_alg, "typ": "JWT"},
+            headers={
+                "alg": settings.testgate_jwt_access_token_algorithm,
+                "typ": settings.testgate_jwt_access_token_type,
+            },
         )
 
     @field_validator("refresh_token")
     def generate_refresh_token(cls, val: str, info: ValidationInfo) -> str:
         now = datetime.utcnow()
         exp = (
-            now + timedelta(days=settings.testgate_jwt_refresh_token_exp_days)
+            now + timedelta(days=settings.testgate_jwt_refresh_token_expiration_days)
         ).timestamp()
         payload = {"exp": exp, "email": info.data["email"]}
         return refresh_token.encode(
             payload=payload,
             key=settings.testgate_jwt_refresh_token_key,
-            headers={"alg": settings.testgate_jwt_refresh_token_alg, "typ": "JWT"},
+            headers={
+                "alg": settings.testgate_jwt_refresh_token_algorithm,
+                "typ": settings.testgate_jwt_refresh_token_type,
+            },
         )
 
 

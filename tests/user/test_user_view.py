@@ -1,46 +1,53 @@
 import uuid
 import random
 import pytest
+from starlette.datastructures import Headers
+from fastapi.testclient import TestClient
+from src.testgate.user.models import User
+from tests.user.conftest import UserFactory
 from src.testgate.auth.crypto.password.library import PasswordHashLibrary
-from src.testgate.auth.crypto.password.strategy import ScryptPasswordHashStrategy
 
 INVALID_ACCESS_TOKEN = uuid.uuid4()
 INVALID_USER_ID = random.randint(1, 1000)
 
-invalid_headers = {"Authorization": f"bearer {INVALID_ACCESS_TOKEN}"}
+invalid_headers = {"Authorization": f"Bearer {INVALID_ACCESS_TOKEN}"}
 
-password_hash_library = PasswordHashLibrary(ScryptPasswordHashStrategy())
+password_hash_library = PasswordHashLibrary("scrypt")
 
 
-async def test_retrieve_current_user(client, user, headers):
+async def test_retrieve_current_user(
+    client: TestClient, user: User, headers: Headers
+) -> None:
     response = client.get(url="/api/v1/me", headers=headers)
 
     assert response.status_code == 200
     assert response.json()["id"] == user.id
 
 
-async def test_retrieve_current_user_with_invalid_token(client):
+async def test_retrieve_current_user_with_invalid_token(client: TestClient) -> None:
     response = client.get(url="/api/v1/me", headers=invalid_headers)
 
     assert response.status_code == 403
 
 
-@pytest.mark.parametrize("role__name", ["Admin"])
-async def test_retrieve_user_by_id(client, user, headers):
+async def test_retrieve_user_by_id(
+    client: TestClient, user: User, headers: Headers
+) -> None:
     response = client.get(url=f"/api/v1/users/{user.id}", headers=headers)
 
     assert response.status_code == 200
     assert response.json()["id"] == user.id
 
 
-@pytest.mark.parametrize("role__name", ["Admin"])
-async def test_retrieve_user_by_invalid_id(client, headers):
+async def test_retrieve_user_by_invalid_id(client: TestClient, headers: dict) -> None:
     response = client.get(url=f"/api/v1/users/{INVALID_USER_ID}", headers=headers)
 
     assert response.status_code == 404
 
 
-async def test_create_user(client, user_factory, headers):
+async def test_create_user(
+    client: TestClient, user_factory: UserFactory, headers: Headers
+) -> None:
     response = client.post(
         url="/api/v1/users",
         json=user_factory.stub(password="password_2024").__dict__,
@@ -50,7 +57,9 @@ async def test_create_user(client, user_factory, headers):
     assert response.status_code == 201
 
 
-async def test_create_user_with_existing_username(client, user_factory, user, headers):
+async def test_create_user_with_existing_username(
+    client: TestClient, user_factory: UserFactory, user: User, headers: Headers
+) -> None:
     response = client.post(
         url="/api/v1/users",
         json=user_factory.stub(
@@ -62,7 +71,9 @@ async def test_create_user_with_existing_username(client, user_factory, user, he
     assert response.status_code == 409
 
 
-async def test_create_user_with_existing_email(client, user_factory, user, headers):
+async def test_create_user_with_existing_email(
+    client: TestClient, user_factory: UserFactory, user: User, headers: Headers
+) -> None:
     response = client.post(
         url="/api/v1/users",
         json=user_factory.stub(email=user.email, password="password_2024").__dict__,
@@ -72,7 +83,9 @@ async def test_create_user_with_existing_email(client, user_factory, user, heade
     assert response.status_code == 409
 
 
-async def test_update_current_user(client, user_factory, user, headers):
+async def test_update_current_user(
+    client: TestClient, user_factory: UserFactory, user: User, headers: Headers
+) -> None:
     response = client.put(
         url="/api/v1/me",
         json=user_factory.stub(password="password_2024").__dict__,
@@ -83,7 +96,9 @@ async def test_update_current_user(client, user_factory, user, headers):
     assert response.json()["id"] == user.id
 
 
-async def test_update_current_user_with_invalid_token(client, user_factory):
+async def test_update_current_user_with_invalid_token(
+    client: TestClient, user_factory: UserFactory
+) -> None:
     response = client.put(
         url="/api/v1/me",
         json=user_factory.stub(password="password_2024").__dict__,
@@ -93,7 +108,9 @@ async def test_update_current_user_with_invalid_token(client, user_factory):
     assert response.status_code == 403
 
 
-async def test_update_user(client, user_factory, user, headers):
+async def test_update_user(
+    client: TestClient, user_factory: UserFactory, user: User, headers: Headers
+) -> None:
     response = client.put(
         url=f"/api/v1/users/{user.id}",
         json=user_factory.stub(password="password_2024").__dict__,
@@ -104,7 +121,9 @@ async def test_update_user(client, user_factory, user, headers):
     assert response.json()["id"] == user.id
 
 
-async def test_update_user_by_invalid_id(client, user_factory, headers):
+async def test_update_user_by_invalid_id(
+    client: TestClient, user_factory: UserFactory, headers: Headers
+) -> None:
     response = client.put(
         url=f"/api/v1/users/{INVALID_USER_ID}",
         json=user_factory.stub(password="password_2024").__dict__,
@@ -114,14 +133,14 @@ async def test_update_user_by_invalid_id(client, user_factory, headers):
     assert response.status_code == 404
 
 
-async def test_verify_current_user(client, token):
+async def test_verify_current_user(client: TestClient, token: str) -> None:
     response = client.get(url=f"/api/v1/users/email/verify/{token}")
 
     assert response.status_code == 200
     assert response.json()["verified"] is True
 
 
-async def test_verify_current_user_with_invalid_token(client):
+async def test_verify_current_user_with_invalid_token(client: TestClient) -> None:
     response = client.get(url=f"/api/v1/users/email/verify/{INVALID_ACCESS_TOKEN}")
 
     assert response.status_code == 403
@@ -130,7 +149,9 @@ async def test_verify_current_user_with_invalid_token(client):
 @pytest.mark.parametrize(
     "user__password", [password_hash_library.encode("password_2024")]
 )
-async def test_update_current_user_password(client, user, headers):
+async def test_update_current_user_password(
+    client: TestClient, user: User, headers: Headers
+) -> None:
     response = client.put(
         url="/api/v1/me/change-password",
         json={
@@ -145,7 +166,9 @@ async def test_update_current_user_password(client, user, headers):
     assert response.json()["id"] == user.id
 
 
-async def test_update_current_user_password_with_invalid_token(client):
+async def test_update_current_user_password_with_invalid_token(
+    client: TestClient,
+) -> None:
     response = client.put(
         url="/api/v1/me/change-password",
         json={
@@ -159,26 +182,28 @@ async def test_update_current_user_password_with_invalid_token(client):
     assert response.status_code == 403
 
 
-async def test_delete_current_user(client, user, headers):
+async def test_delete_current_user(
+    client: TestClient, user: User, headers: Headers
+) -> None:
     response = client.delete(url="/api/v1/me", headers=headers)
 
     assert response.status_code == 200
     assert response.json()["id"] == user.id
 
 
-async def test_delete_current_user_with_invalid_token(client):
+async def test_delete_current_user_with_invalid_token(client: TestClient) -> None:
     response = client.delete(url="/api/v1/me", headers=invalid_headers)
 
     assert response.status_code == 403
 
 
-async def test_delete_user(client, user, headers):
+async def test_delete_user(client: TestClient, user: User, headers: Headers) -> None:
     response = client.delete(url=f"/api/v1/users/{user.id}", headers=headers)
 
     assert response.status_code == 200
 
 
-async def test_delete_user_by_invalid_id(client, headers):
+async def test_delete_user_by_invalid_id(client: TestClient, headers: Headers) -> None:
     response = client.delete(url=f"/api/v1/users/{INVALID_USER_ID}", headers=headers)
 
     assert response.status_code == 404

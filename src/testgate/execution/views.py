@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Sequence
 from sqlmodel import Session
 from fastapi import Query, Depends, APIRouter
 from redis.asyncio.client import Redis
@@ -14,7 +14,8 @@ from .schemas import (
     DeleteExecutionResponse,
 )
 import src.testgate.execution.service as execution_service
-from src.testgate.database.service import get_sqlmodel_session, get_redis_client
+from src.testgate.database.service import get_sqlmodel_session
+from src.testgate.cache.service import get_redis_client
 
 router = APIRouter(tags=["executions"])
 
@@ -55,7 +56,7 @@ async def retrieve_execution_by_query_parameters(
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
     name: str = Query(default=None),
-) -> list[Execution] | None:
+) -> Sequence[Execution] | None:
     """Search execution by name."""
 
     query_execution = ExecutionQueryParameters(offset=offset, limit=limit, name=name)
@@ -73,7 +74,7 @@ async def retrieve_execution_by_query_parameters(
 async def create_execution(
     *,
     sqlmodel_session: Session = Depends(get_sqlmodel_session),
-    redis_client=Depends(get_redis_client),
+    redis_client: Redis = Depends(get_redis_client),
     execution: CreateExecutionRequest,
 ) -> Execution | None:
     """Creates execution."""

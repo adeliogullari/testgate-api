@@ -1,4 +1,5 @@
 import factory
+from typing import Any
 from factory.alchemy import SQLAlchemyModelFactory
 from src.testgate.case.models import Case, CaseResult
 
@@ -26,6 +27,6 @@ class CaseFactory(SQLAlchemyModelFactory):
     result = factory.SubFactory(CaseResultFactory)
 
     @factory.post_generation
-    def result_generation(self, create, extracted, **kwargs):
+    def result_generation(self, create: Any, extracted: Any, **kwargs: Any) -> None:
         if not create:
             self.result = self.result.__dict__

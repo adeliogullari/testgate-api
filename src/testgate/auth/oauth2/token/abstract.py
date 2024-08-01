@@ -6,15 +6,8 @@ from itertools import chain, repeat
 from abc import ABC, abstractmethod
 from .claims import Payload
 from secrets import compare_digest
-from src.testgate.auth.crypto.digest.strategy import (
-    Blake2bMessageDigestStrategy,
-    MessageDigestStrategy,
-)
-from src.testgate.auth.crypto.digest.blake2b import Blake2b
 from src.testgate.auth.crypto.digest.library import MessageDigestLibrary
 
-blake2b = Blake2b()
-message_digest_library = MessageDigestLibrary(Blake2bMessageDigestStrategy())
 
 Base64Segment = r"[A-Za-z0-9+/]{4}"
 Base64Padding = r"[A-Za-z0-9+/]{2}(?:==)"
@@ -23,16 +16,8 @@ JsonSegment = r"\s*\{.*?}\s*"
 
 
 class AuthenticationToken(ABC):
-    def __init__(self, strategy: MessageDigestStrategy):
-        self._strategy = strategy
-
-    @property
-    def strategy(self) -> MessageDigestStrategy:
-        return self._strategy
-
-    @strategy.setter
-    def strategy(self, strategy: MessageDigestStrategy) -> None:
-        self._strategy = strategy
+    def __init__(self, algorithm: str):
+        self.message_digest_library = MessageDigestLibrary(algorithm=algorithm)
 
     def _is_valid_base64_encoding(self, string: Any) -> bool:
         base64_pattern = re.compile(
@@ -54,7 +39,7 @@ class AuthenticationToken(ABC):
             json.dumps(headers).encode(encoding="utf-8", errors="strict")
         )
 
-    def _safe_b64decode_payload(self, payload: str, validate=True) -> bytes:
+    def _safe_b64decode_payload(self, payload: str, validate: bool = True) -> bytes:
         if self._is_valid_base64_encoding(payload):
             return base64.b64decode(payload, validate=validate)
         return base64.b64decode(
@@ -62,7 +47,7 @@ class AuthenticationToken(ABC):
             validate=validate,
         )
 
-    def _safe_b64decode_headers(self, headers: str, validate=True) -> bytes:
+    def _safe_b64decode_headers(self, headers: str, validate: bool = True) -> bytes:
         if self._is_valid_base64_encoding(headers):
             return base64.b64decode(headers, validate=validate)
         return base64.b64decode(
@@ -84,7 +69,9 @@ class AuthenticationToken(ABC):
     def encode(self, payload: Any, key: str, headers: Any) -> str:
         payload = self._safe_b64encode_payload(payload=payload)
         headers = self._safe_b64encode_headers(headers=headers)
-        signature = message_digest_library.encode(data=f"{payload}.{headers}", key=key)
+        signature = self.message_digest_library.encode(
+            data=f"{payload}.{headers}", key=key
+        )
         return b".".join([payload, headers, signature]).decode("utf-8")
 
     @abstractmethod

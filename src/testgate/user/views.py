@@ -37,10 +37,10 @@ from src.testgate.database.service import get_sqlmodel_session
 
 from src.testgate.auth.oauth2.token.access import AccessToken
 from src.testgate.auth.oauth2.token.refresh import RefreshToken
-from src.testgate.auth.crypto.digest.strategy import Blake2bMessageDigestStrategy
 
-access_token = AccessToken(Blake2bMessageDigestStrategy())
-refresh_token = RefreshToken(Blake2bMessageDigestStrategy())
+settings = Settings()
+access_token = AccessToken(algorithm=settings.testgate_jwt_access_token_algorithm)
+refresh_token = RefreshToken(algorithm=settings.testgate_jwt_refresh_token_algorithm)
 
 router = APIRouter(tags=["users"])
 
@@ -114,7 +114,7 @@ async def retrieve_user_by_query_parameters(
     email: str = Query(default=None),
     verified: bool = Query(default=False),
     role: str = Query(default=None),
-) -> Sequence[User] | None:
+) -> Sequence[User]:
     """Retrieves user by query parameters."""
 
     query_parameters = UserQueryParametersModel(
@@ -145,7 +145,7 @@ async def create_user(
     *,
     sqlmodel_session: Session = Depends(get_sqlmodel_session),
     user: CreateUserRequestModel,
-) -> User | None:
+) -> User:
     """Creates user."""
 
     retrieved_user = await user_service.retrieve_by_username(
@@ -180,7 +180,7 @@ async def update_current_user(
     user: UpdateUserRequestModel,
     sqlmodel_session: Session = Depends(get_sqlmodel_session),
     retrieved_user: User = Depends(retrieve_current_user),
-) -> User | None:
+) -> User:
     """Updates current user."""
 
     user.role = await role_service.retrieve_by_name(
@@ -205,7 +205,7 @@ async def update_user(
     user_id: int,
     user: UpdateUserRequestModel,
     sqlmodel_session: Session = Depends(get_sqlmodel_session),
-) -> User | None:
+) -> User:
     """Updates user."""
 
     retrieved_user = await user_service.retrieve_by_id(
@@ -236,7 +236,7 @@ async def verify_current_user(
     token: str,
     sqlmodel_session: Session = Depends(get_sqlmodel_session),
     settings: Settings = Depends(get_settings),
-) -> User | None:
+) -> User:
     """Verifies current user."""
 
     verified, payload, headers, signature = access_token.verify_and_decode(
@@ -271,7 +271,7 @@ async def update_current_user_password(
     sqlmodel_session: Session = Depends(get_sqlmodel_session),
     change_password: ChangeUserPasswordRequestModel,
     retrieved_user: User = Depends(retrieve_current_user),
-) -> User | None:
+) -> User:
     """Updates current user password."""
 
     if not retrieved_user.check_password(change_password.current_password):
@@ -338,7 +338,7 @@ async def delete_current_user(
     *,
     sqlmodel_session: Session = Depends(get_sqlmodel_session),
     retrieved_user: User = Depends(retrieve_current_user),
-) -> User | None:
+) -> User:
     """Deletes current user."""
 
     deleted_user = await user_service.delete(
@@ -356,7 +356,7 @@ async def delete_current_user(
 )
 async def delete_user(
     *, user_id: int, sqlmodel_session: Session = Depends(get_sqlmodel_session)
-) -> User | None:
+) -> User:
     """Deletes user."""
 
     retrieved_user = await user_service.retrieve_by_id(

@@ -1,5 +1,5 @@
 import json
-from typing import Optional, Any, Sequence
+from typing import Any, Sequence
 from sqlmodel import select, Session
 from redis.asyncio.client import Redis
 from src.testgate.permission.models import Permission
@@ -12,7 +12,7 @@ from .schemas import (
 
 async def create(
     *, sqlmodel_session: Session, permission: CreatePermissionRequest
-) -> Permission | None:
+) -> Permission:
     """Creates a new permission object."""
 
     created_permission = Permission()
@@ -46,7 +46,7 @@ async def retrieve_by_id(
 
 async def retrieve_by_name(
     *, sqlmodel_session: Session, permission_name: str
-) -> Permission | None:
+) -> Permission:
     """Return a permission object based on the given name."""
 
     statement: Any = select(Permission).where(Permission.name == permission_name)
@@ -58,7 +58,7 @@ async def retrieve_by_name(
 
 async def retrieve_by_query_parameters(
     *, sqlmodel_session: Session, query_parameters: PermissionQueryParameters
-) -> Sequence[Permission] | None:
+) -> Sequence[Permission]:
     """Return list of permission objects based on the given query parameters."""
 
     statement: Any = select(Permission)
@@ -77,7 +77,7 @@ async def update(
     sqlmodel_session: Session,
     retrieved_permission: Permission,
     permission: UpdatePermissionRequest,
-) -> Optional[Permission]:
+) -> Permission:
     """Updates an existing permission object."""
 
     retrieved_permission.name = permission.name
@@ -92,7 +92,7 @@ async def update(
 
 async def delete(
     *, sqlmodel_session: Session, retrieved_permission: Permission
-) -> Optional[Permission]:
+) -> Permission:
     """Deletes an existing permission object."""
 
     sqlmodel_session.delete(retrieved_permission)

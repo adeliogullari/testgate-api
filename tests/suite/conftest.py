@@ -1,3 +1,4 @@
+from typing import Any
 import factory
 from src.testgate.suite.models import Suite, SuiteResult
 from factory.alchemy import SQLAlchemyModelFactory
@@ -28,6 +29,6 @@ class SuiteFactory(SQLAlchemyModelFactory):
     result = factory.SubFactory(SuiteResultFactory)
 
     @factory.post_generation
-    def result_generation(self, create, extracted, **kwargs):
+    def result_generation(self, create: Any, extracted: Any, **kwargs: Any) -> None:
         if not create:
             self.result = self.result.__dict__

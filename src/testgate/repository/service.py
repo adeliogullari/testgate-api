@@ -1,5 +1,5 @@
 import json
-from typing import Optional, List, Any
+from typing import Any, Sequence
 from sqlmodel import select, Session
 from redis.asyncio.client import Redis
 from src.testgate.repository.models import Repository
@@ -15,7 +15,7 @@ async def create(
     sqlmodel_session: Session,
     redis_client: Redis,
     repository: CreateRepositoryRequest,
-) -> Repository | None:
+) -> Repository:
     """Creates a new repository object."""
 
     created_repository = Repository(name=repository.name)
@@ -53,7 +53,7 @@ async def retrieve_by_id(
 
 async def retrieve_by_name(
     *, sqlmodel_session: Session, repository_name: str
-) -> Repository | None:
+) -> Repository:
     """Return a repository object based on the given name."""
 
     statement: Any = select(Repository).where(Repository.name == repository_name)
@@ -65,7 +65,7 @@ async def retrieve_by_name(
 
 async def retrieve_by_query_parameters(
     *, sqlmodel_session: Session, query_parameters: RepositoryQueryParameters
-) -> List[Repository] | None:
+) -> Sequence[Repository]:
     """Return list of repository objects based on the given query parameters."""
 
     offset = query_parameters.offset
@@ -90,7 +90,7 @@ async def update(
     redis_client: Redis,
     retrieved_repository: Repository,
     repository: UpdateRepositoryRequest,
-) -> Optional[Repository]:
+) -> Repository:
     """Updates an existing repository object."""
 
     retrieved_repository.name = repository.name
@@ -110,7 +110,7 @@ async def update(
 
 async def delete(
     *, sqlmodel_session: Session, redis_client: Redis, retrieved_repository: Repository
-) -> Optional[Repository]:
+) -> Repository:
     """Deletes an existing repository object."""
 
     sqlmodel_session.delete(retrieved_repository)

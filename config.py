@@ -8,12 +8,15 @@ class Settings(BaseSettings):
     testgate_uvicorn_log_level: str
     testgate_uvicorn_reload: bool
     testgate_uvicorn_workers: int
-    testgate_jwt_access_token_exp_minutes: int
+    testgate_password_hash_algorithm: str
+    testgate_jwt_access_token_expiration_minutes: int
     testgate_jwt_access_token_key: str
-    testgate_jwt_access_token_alg: str
-    testgate_jwt_refresh_token_exp_days: int
+    testgate_jwt_access_token_algorithm: str
+    testgate_jwt_access_token_type: str
+    testgate_jwt_refresh_token_expiration_days: int
     testgate_jwt_refresh_token_key: str
-    testgate_jwt_refresh_token_alg: str
+    testgate_jwt_refresh_token_algorithm: str
+    testgate_jwt_refresh_token_type: str
     testgate_postgresql_schema: str
     testgate_postgresql_user: str
     testgate_postgresql_password: str
@@ -38,5 +41,5 @@ class Settings(BaseSettings):
 
 
 @lru_cache()
-def get_settings():
+def get_settings() -> Settings:
     return Settings()

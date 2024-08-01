@@ -1,18 +1,10 @@
 import secrets
-from src.testgate.auth.crypto.password.abstract import PasswordHashStrategy
+from src.testgate.auth.crypto.password.factory import PasswordHashStrategyFactory
 
 
 class PasswordHashLibrary:
-    def __init__(self, strategy: PasswordHashStrategy):
-        self._strategy = strategy
-
-    @property
-    def strategy(self) -> PasswordHashStrategy:
-        return self._strategy
-
-    @strategy.setter
-    def strategy(self, strategy: PasswordHashStrategy) -> None:
-        self._strategy = strategy
+    def __init__(self, algorithm: str):
+        self._strategy = PasswordHashStrategyFactory.create(algorithm=algorithm)
 
     def encode(self, password: str, salt: str = secrets.token_hex(64)) -> bytes:
         return self._strategy.encode(password=password, salt=salt)

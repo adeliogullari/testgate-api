@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Sequence
 from sqlmodel import Session
 from fastapi import Query, Depends, APIRouter
 from redis.asyncio.client import Redis
@@ -21,7 +21,8 @@ from .service import (
     update,
     delete,
 )
-from src.testgate.database.service import get_sqlmodel_session, get_redis_client
+from src.testgate.database.service import get_sqlmodel_session
+from src.testgate.cache.service import get_redis_client
 
 router = APIRouter(tags=["repositories"])
 
@@ -36,7 +37,7 @@ async def retrieve_repository_by_id(
     sqlmodel_session: Session = Depends(get_sqlmodel_session),
     redis_client: Redis = Depends(get_redis_client),
     repository_id: int,
-) -> Repository | None:
+) -> Repository:
     """Retrieve repository by id."""
 
     retrieved_repository = await retrieve_by_id(
@@ -62,7 +63,7 @@ async def retrieve_repository_by_query_parameters(
     offset: int = 0,
     limit: int = Query(default=100, lte=100),
     name: str = Query(default=None),
-) -> list[Repository] | None:
+) -> Sequence[Repository]:
     """Retrieves repository by query parameters."""
 
     query_repository = RepositoryQueryParameters(offset=offset, limit=limit, name=name)
@@ -82,9 +83,9 @@ async def retrieve_repository_by_query_parameters(
 async def create_repository(
     *,
     sqlmodel_session: Session = Depends(get_sqlmodel_session),
-    redis_client=Depends(get_redis_client),
+    redis_client: Redis = Depends(get_redis_client),
     repository: CreateRepositoryRequest,
-) -> Repository | None:
+) -> Repository:
     """Creates repository."""
 
     retrieved_repository = await retrieve_by_name(
@@ -114,7 +115,7 @@ async def update_repository(
     redis_client: Redis = Depends(get_redis_client),
     repository_id: int,
     repository: UpdateRepositoryRequest,
-) -> Repository | None:
+) -> Repository:
     """Updates repository."""
 
     retrieved_repository = await retrieve_by_id(
@@ -146,7 +147,7 @@ async def delete_repository(
     sqlmodel_session: Session = Depends(get_sqlmodel_session),
     redis_client: Redis = Depends(get_redis_client),
     repository_id: int,
-) -> Repository | None:
+) -> Repository:
     """Deletes repository."""
 
     retrieved_repository = await retrieve_by_id(

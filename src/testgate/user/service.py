@@ -9,7 +9,7 @@ from src.testgate.user.schemas import (
 from src.testgate.role.models import Role
 
 
-async def retrieve_by_id(*, sqlmodel_session: Session, user_id: int) -> User | None:
+async def retrieve_by_id(*, sqlmodel_session: Session, user_id: int) -> User:
     """Returns a user object based on the given user id."""
 
     statement: Any = select(User).where(User.id == user_id)
@@ -21,7 +21,7 @@ async def retrieve_by_id(*, sqlmodel_session: Session, user_id: int) -> User | N
 
 async def retrieve_by_username(
     *, sqlmodel_session: Session, user_username: str
-) -> User | None:
+) -> User:
     """Returns a user object based on the given user username."""
 
     statement: Any = select(User).where(User.username == user_username)
@@ -31,9 +31,7 @@ async def retrieve_by_username(
     return retrieved_user
 
 
-async def retrieve_by_email(
-    *, sqlmodel_session: Session, user_email: str
-) -> User | None:
+async def retrieve_by_email(*, sqlmodel_session: Session, user_email: str) -> User:
     """Returns a user object based on the given user email."""
 
     statement: Any = select(User).where(User.email == user_email)
@@ -45,7 +43,7 @@ async def retrieve_by_email(
 
 async def retrieve_by_query_parameters(
     *, sqlmodel_session: Session, query_parameters: UserQueryParametersModel
-) -> Sequence[User] | None:
+) -> Sequence[User]:
     """Returns a user object based on the given query parameters."""
 
     offset = query_parameters.offset
@@ -63,9 +61,7 @@ async def retrieve_by_query_parameters(
     return retrieved_user
 
 
-async def create(
-    *, sqlmodel_session: Session, user: CreateUserRequestModel
-) -> User | None:
+async def create(*, sqlmodel_session: Session, user: CreateUserRequestModel) -> User:
     """Creates a new user."""
 
     created_user = User(
@@ -88,7 +84,7 @@ async def create(
 
 async def update(
     *, sqlmodel_session: Session, retrieved_user: User, user: UpdateUserRequestModel
-) -> User | None:
+) -> User:
     """Updates an existing user."""
 
     retrieved_user.firstname = user.firstname
@@ -109,7 +105,7 @@ async def update(
 
 async def update_password(
     *, sqlmodel_session: Session, retrieved_user: User, password: str
-) -> User | None:
+) -> User:
     """Updates an existing password"""
 
     retrieved_user.password = password
@@ -123,7 +119,7 @@ async def update_password(
     return updated_user
 
 
-async def verify(*, sqlmodel_session: Session, retrieved_user: User) -> User | None:
+async def verify(*, sqlmodel_session: Session, retrieved_user: User) -> User:
     """Verifies an existing user."""
 
     retrieved_user.verified = True
@@ -137,7 +133,7 @@ async def verify(*, sqlmodel_session: Session, retrieved_user: User) -> User | N
     return verified_user
 
 
-async def delete(*, sqlmodel_session: Session, retrieved_user: User) -> User | None:
+async def delete(*, sqlmodel_session: Session, retrieved_user: User) -> User:
     """Deletes an existing user."""
 
     sqlmodel_session.delete(retrieved_user)

@@ -12,7 +12,7 @@ from src.testgate.execution.schemas import (
 
 async def create(
     *, sqlmodel_session: Session, redis_client: Redis, execution: CreateExecutionRequest
-) -> Execution | None:
+) -> Execution:
     """Creates a new execution object."""
 
     created_execution = Execution(name=execution.name, result=execution.result)
@@ -31,7 +31,7 @@ async def create(
 
 async def retrieve_by_id(
     *, sqlmodel_session: Session, redis_client: Redis, execution_id: int
-) -> Execution | None:
+) -> Execution:
     """Returns an execution object based on the given id."""
 
     if cached_execution := await redis_client.get(name=f"execution_{execution_id}"):
@@ -50,7 +50,7 @@ async def retrieve_by_id(
 
 async def retrieve_by_query_parameters(
     *, sqlmodel_session: Session, query_parameters: ExecutionQueryParameters
-) -> Sequence[Execution] | None:
+) -> Sequence[Execution]:
     """Return list of execution objects based on the given query parameters."""
 
     offset = query_parameters.offset
@@ -74,7 +74,7 @@ async def update(
     redis_client: Redis,
     retrieved_execution: Execution,
     execution: UpdateExecutionRequest,
-) -> Execution | None:
+) -> Execution:
     """Updates an existing execution object."""
 
     retrieved_execution.name = execution.name
@@ -94,7 +94,7 @@ async def update(
 
 async def delete(
     *, sqlmodel_session: Session, redis_client: Redis, retrieved_execution: Execution
-) -> Execution | None:
+) -> Execution:
     """Deletes an existing execution object."""
 
     sqlmodel_session.delete(retrieved_execution)

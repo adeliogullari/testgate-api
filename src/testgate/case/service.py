@@ -8,7 +8,7 @@ from .schemas import CreateCaseRequestModel, CaseQueryParameters, UpdateCaseRequ
 
 async def create(
     *, sqlmodel_session: Session, redis_client: Redis, case: CreateCaseRequestModel
-) -> Case | None:
+) -> Case:
     """Creates a new case object."""
 
     created_case = Case(
@@ -46,7 +46,7 @@ async def retrieve_by_id(
 
 async def retrieve_by_query_parameters(
     *, sqlmodel_session: Session, query_parameters: CaseQueryParameters
-) -> Sequence[Case] | None:
+) -> Sequence[Case]:
     """Returns list of case objects based on the given query parameters."""
 
     offset = query_parameters.offset
@@ -70,7 +70,7 @@ async def update(
     redis_client: Redis,
     retrieved_case: Case,
     case: UpdateCaseRequestModel,
-) -> Case | None:
+) -> Case:
     """Updates an existing case object."""
 
     retrieved_case.name = case.name
@@ -91,7 +91,7 @@ async def update(
 
 async def delete(
     *, sqlmodel_session: Session, redis_client: Redis, retrieved_case: Case
-) -> Case | None:
+) -> Case:
     """Deletes an existing case object."""
 
     sqlmodel_session.delete(retrieved_case)

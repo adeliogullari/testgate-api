@@ -1,12 +1,10 @@
 import pytest
 from datetime import datetime
-from src.testgate.auth.crypto.digest.strategy import Blake2bMessageDigestStrategy
+from src.testgate.auth.oauth2.token.access import AccessToken
 
 
-@pytest.mark.parametrize(
-    "access_token", [Blake2bMessageDigestStrategy()], indirect=True
-)
-def test_encode_with_valid_payload_and_key(access_token):
+@pytest.mark.parametrize("access_token", ["blake2b"], indirect=True)
+def test_encode_with_valid_payload_and_key(access_token: AccessToken) -> None:
     token = access_token.encode(
         payload={"email": "username@testgate.com"},
         key="key",
@@ -15,10 +13,8 @@ def test_encode_with_valid_payload_and_key(access_token):
     assert token is not None
 
 
-@pytest.mark.parametrize(
-    "access_token", [Blake2bMessageDigestStrategy()], indirect=True
-)
-def test_decode_with_valid_payload_and_key(access_token):
+@pytest.mark.parametrize("access_token", ["blake2b"], indirect=True)
+def test_decode_with_valid_payload_and_key(access_token: AccessToken) -> None:
     token = access_token.encode(
         payload={"email": "username@testgate.com"},
         key="key",
@@ -32,10 +28,8 @@ def test_decode_with_valid_payload_and_key(access_token):
     assert signature is not None
 
 
-@pytest.mark.parametrize(
-    "access_token", [Blake2bMessageDigestStrategy()], indirect=True
-)
-def test_verify_with_valid_token_and_key(access_token):
+@pytest.mark.parametrize("access_token", ["blake2b"], indirect=True)
+def test_verify_with_valid_token_and_key(access_token: AccessToken) -> None:
     token = access_token.encode(
         payload={"email": "username@testgate.com"},
         key="key",
@@ -47,10 +41,8 @@ def test_verify_with_valid_token_and_key(access_token):
     assert is_token_verified is True
 
 
-@pytest.mark.parametrize(
-    "access_token", [Blake2bMessageDigestStrategy()], indirect=True
-)
-def test_verify_with_invalid_key(access_token):
+@pytest.mark.parametrize("access_token", ["blake2b"], indirect=True)
+def test_verify_with_invalid_key(access_token: AccessToken) -> None:
     token = access_token.encode(
         payload={"email": "username@testgate.com"},
         key="key",
@@ -62,10 +54,8 @@ def test_verify_with_invalid_key(access_token):
     assert is_token_verified is False
 
 
-@pytest.mark.parametrize(
-    "access_token", [Blake2bMessageDigestStrategy()], indirect=True
-)
-def test_verify_with_exceed_expiration(access_token):
+@pytest.mark.parametrize("access_token", ["blake2b"], indirect=True)
+def test_verify_with_exceed_expiration(access_token: AccessToken) -> None:
     exp = datetime.utcnow().timestamp()
     token = access_token.encode(
         payload={"exp": exp, "email": "username@testgate.com"},
@@ -78,10 +68,8 @@ def test_verify_with_exceed_expiration(access_token):
     assert is_token_verified is False
 
 
-@pytest.mark.parametrize(
-    "access_token", [Blake2bMessageDigestStrategy()], indirect=True
-)
-def test_verify_and_decode_with_valid_token_and_key(access_token):
+@pytest.mark.parametrize("access_token", ["blake2b"], indirect=True)
+def test_verify_and_decode_with_valid_token_and_key(access_token: AccessToken) -> None:
     token = access_token.encode(
         payload={"email": "username@testgate.com"},
         key="key",
@@ -98,10 +86,8 @@ def test_verify_and_decode_with_valid_token_and_key(access_token):
     assert signature is not None
 
 
-@pytest.mark.parametrize(
-    "access_token", [Blake2bMessageDigestStrategy()], indirect=True
-)
-def test_verify_and_decode_with_invalid_key(access_token):
+@pytest.mark.parametrize("access_token", ["blake2b"], indirect=True)
+def test_verify_and_decode_with_invalid_key(access_token: AccessToken) -> None:
     token = access_token.encode(
         payload={"email": "username@testgate.com"},
         key="key",
@@ -115,10 +101,8 @@ def test_verify_and_decode_with_invalid_key(access_token):
     assert verified is False
 
 
-@pytest.mark.parametrize(
-    "access_token", [Blake2bMessageDigestStrategy()], indirect=True
-)
-def test_verify_and_decode_with_exceed_expiration(access_token):
+@pytest.mark.parametrize("access_token", ["blake2b"], indirect=True)
+def test_verify_and_decode_with_exceed_expiration(access_token: AccessToken) -> None:
     exp = datetime.utcnow().timestamp()
     token = access_token.encode(
         payload={"exp": exp, "email": "username@testgate.com"},

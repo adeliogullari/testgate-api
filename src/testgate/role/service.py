@@ -6,9 +6,7 @@ from .models import Role
 from .schemas import CreateRoleRequestModel, RoleQueryParameters, UpdateRoleRequestModel
 
 
-async def create(
-    *, sqlmodel_session: Session, role: CreateRoleRequestModel
-) -> Role | None:
+async def create(*, sqlmodel_session: Session, role: CreateRoleRequestModel) -> Role:
     """Creates a new role object."""
 
     created_role = Role()
@@ -41,7 +39,7 @@ async def retrieve_by_id(
     return retrieved_role
 
 
-async def retrieve_by_name(*, sqlmodel_session: Session, name: str) -> Role | None:
+async def retrieve_by_name(*, sqlmodel_session: Session, name: str) -> Role:
     """Return a role object based on the given name."""
 
     statement: Any = select(Role).where(Role.name == name)
@@ -53,7 +51,7 @@ async def retrieve_by_name(*, sqlmodel_session: Session, name: str) -> Role | No
 
 async def retrieve_by_query_parameters(
     *, sqlmodel_session: Session, query_parameters: RoleQueryParameters
-) -> Sequence[Role] | None:
+) -> Sequence[Role]:
     """Return list of role objects based on the given query parameters."""
 
     offset = query_parameters.offset
@@ -77,7 +75,7 @@ async def update(
     redis_client: Redis,
     retrieved_role: Role,
     role: UpdateRoleRequestModel,
-) -> Role | None:
+) -> Role:
     """Updates an existing role object."""
 
     retrieved_role.name = role.name
@@ -97,7 +95,7 @@ async def update(
 
 async def delete(
     *, sqlmodel_session: Session, redis_client: Redis, retrieved_role: Role
-) -> Role | None:
+) -> Role:
     """Deletes an existing role object."""
 
     sqlmodel_session.delete(retrieved_role)
